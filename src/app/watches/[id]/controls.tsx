@@ -4,6 +4,8 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Field } from "@/components/field";
 import { IntervalGroup } from "@/components/interval-group";
+import { ConditionPicker } from "@/components/condition-picker";
+import { isValidRegex, optionFor, type ConditionType } from "@/lib/condition";
 
 export default function WatchControls({
   id,
@@ -11,18 +13,24 @@ export default function WatchControls({
   label: initialLabel,
   notifyEmail: initialEmail,
   intervalMinutes: initialInterval,
+  conditionType: initialConditionType,
+  conditionValue: initialConditionValue,
 }: {
   id: string;
   isActive: boolean;
   label: string;
   notifyEmail: string;
   intervalMinutes: number;
+  conditionType: string;
+  conditionValue: string | null;
 }) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [label, setLabel] = useState(initialLabel);
   const [email, setEmail] = useState(initialEmail);
   const [interval, setIntervalValue] = useState(initialInterval);
+  const [conditionType, setConditionType] = useState<ConditionType>(initialConditionType as ConditionType);
+  const [conditionValue, setConditionValue] = useState(initialConditionValue ?? "");
 
   async function patch(data: Record<string, unknown>) {
     setBusy(true);
@@ -83,6 +91,27 @@ export default function WatchControls({
           }}
         />
       </Field>
+      <ConditionPicker
+        type={conditionType}
+        value={conditionValue}
+        onTypeChange={(t) => {
+          setConditionType(t);
+          const opt = optionFor(t);
+          if (!opt.needsValue) {
+            setConditionValue("");
+            patch({ conditionType: t, conditionValue: null });
+          }
+        }}
+        onValueChange={(v) => {
+          setConditionValue(v);
+          const opt = optionFor(conditionType);
+          const valid =
+            v.trim().length > 0 &&
+            (conditionType !== "regex" || isValidRegex(v.trim())) &&
+            (opt.valueKind !== "number" || Number.isFinite(Number(v)));
+          if (valid) patch({ conditionType, conditionValue: v.trim() });
+        }}
+      />
       <div className="flex flex-wrap gap-2 pt-2 border-t border-neutral-200 dark:border-neutral-800">
         <button
           disabled={busy}

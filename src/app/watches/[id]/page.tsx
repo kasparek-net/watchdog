@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { db } from "@/lib/db";
 import { getSessionEmail } from "@/lib/session";
 import { intervalLabel, shortenUrl } from "@/lib/format";
+import { conditionLabel, type ConditionType } from "@/lib/condition";
 import { Countdown } from "@/components/countdown";
 import WatchControls from "./controls";
 
@@ -71,7 +72,10 @@ export default async function WatchDetail({
           )}
         </Box>
         <Box title="Notify">
-          <span className="text-sm">{watch.notifyEmail}</span>
+          <div className="text-sm">{watch.notifyEmail}</div>
+          <div className="text-xs text-neutral-500 mt-0.5">
+            {conditionLabel(watch.conditionType as ConditionType, watch.conditionValue)}
+          </div>
         </Box>
         <Box title="Status">
           <div className="text-sm">
@@ -99,6 +103,8 @@ export default async function WatchDetail({
         label={watch.label}
         notifyEmail={watch.notifyEmail}
         intervalMinutes={watch.intervalMinutes}
+        conditionType={watch.conditionType}
+        conditionValue={watch.conditionValue}
       />
 
       <div>

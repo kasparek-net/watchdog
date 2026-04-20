@@ -4,6 +4,8 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Field } from "@/components/field";
 import { IntervalGroup } from "@/components/interval-group";
+import { ConditionPicker } from "@/components/condition-picker";
+import { isValidRegex, optionFor, type ConditionType } from "@/lib/condition";
 
 type TestState =
   | { status: "idle" }
@@ -22,6 +24,8 @@ export default function NewWatchForm({ defaultEmail }: { defaultEmail: string })
   const [label, setLabel] = useState("");
   const [email, setEmail] = useState(defaultEmail);
   const [intervalMinutes, setIntervalMinutes] = useState(60);
+  const [conditionType, setConditionType] = useState<ConditionType>("change");
+  const [conditionValue, setConditionValue] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [test, setTest] = useState<TestState>({ status: "idle" });
@@ -98,7 +102,15 @@ export default function NewWatchForm({ defaultEmail }: { defaultEmail: string })
       const res = await fetch("/api/watches", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ label, url, selector, notifyEmail: email, intervalMinutes }),
+        body: JSON.stringify({
+          label,
+          url,
+          selector,
+          notifyEmail: email,
+          intervalMinutes,
+          conditionType,
+          conditionValue: optionFor(conditionType).needsValue ? conditionValue.trim() : null,
+        }),
       });
       if (!res.ok) {
         const j = await res.json().catch(() => ({ error: "Failed to save" }));
@@ -115,7 +127,13 @@ export default function NewWatchForm({ defaultEmail }: { defaultEmail: string })
     }
   }
 
-  const canSave = !!selector && !!label && !!email && !submitting;
+  const conditionOpt = optionFor(conditionType);
+  const conditionValid =
+    !conditionOpt.needsValue ||
+    (conditionValue.trim().length > 0 &&
+      (conditionType !== "regex" || isValidRegex(conditionValue.trim())) &&
+      (conditionOpt.valueKind !== "number" || Number.isFinite(Number(conditionValue))));
+  const canSave = !!selector && !!label && !!email && conditionValid && !submitting;
 
   return (
     <div className="space-y-8 pb-24">
@@ -210,6 +228,14 @@ export default function NewWatchForm({ defaultEmail }: { defaultEmail: string })
             <Field label="Check every">
               <IntervalGroup value={intervalMinutes} onChange={setIntervalMinutes} />
             </Field>
+            <div className="pt-2 border-t border-neutral-200 dark:border-neutral-800">
+              <ConditionPicker
+                type={conditionType}
+                value={conditionValue}
+                onTypeChange={setConditionType}
+                onValueChange={setConditionValue}
+              />
+            </div>
           </Section>
 
           <div className="sticky bottom-0 -mx-4 px-4 py-3 bg-neutral-50/95 dark:bg-neutral-950/95 backdrop-blur border-t border-neutral-200 dark:border-neutral-800 flex items-center justify-between gap-4">

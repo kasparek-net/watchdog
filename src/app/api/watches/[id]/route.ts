@@ -2,15 +2,39 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSessionEmail } from "@/lib/session";
 import { z } from "zod";
 import { db } from "@/lib/db";
+import { CONDITION_TYPES, isValidRegex, optionFor, type ConditionType } from "@/lib/condition";
 
 export const runtime = "nodejs";
 
-const PatchSchema = z.object({
-  label: z.string().min(1).max(100).optional(),
-  notifyEmail: z.string().email().max(200).optional(),
-  isActive: z.boolean().optional(),
-  intervalMinutes: z.number().int().min(15).max(10080).optional(),
-});
+const PatchSchema = z
+  .object({
+    label: z.string().min(1).max(100).optional(),
+    notifyEmail: z.string().email().max(200).optional(),
+    isActive: z.boolean().optional(),
+    intervalMinutes: z.number().int().min(15).max(10080).optional(),
+    conditionType: z.enum(CONDITION_TYPES).optional(),
+    conditionValue: z.string().max(500).nullable().optional(),
+  })
+  .superRefine((data, ctx) => {
+    if (!data.conditionType) return;
+    const opt = optionFor(data.conditionType as ConditionType);
+    if (!opt.needsValue) {
+      data.conditionValue = null;
+      return;
+    }
+    const v = data.conditionValue?.trim() ?? "";
+    if (!v) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["conditionValue"], message: "Value required" });
+      return;
+    }
+    if (data.conditionType === "regex" && !isValidRegex(v)) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["conditionValue"], message: "Invalid regex" });
+    }
+    if (opt.valueKind === "number" && !Number.isFinite(Number(v))) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["conditionValue"], message: "Must be a number" });
+    }
+    data.conditionValue = v;
+  });
 
 async function getOwned(id: string, userId: string) {
   const watch = await db.watch.findFirst({ where: { id, userId } });

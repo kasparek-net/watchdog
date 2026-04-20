@@ -3,6 +3,7 @@ import { timingSafeEqual } from "node:crypto";
 import { db } from "@/lib/db";
 import { fetchAndExtract } from "@/lib/extract";
 import { sendChangeNotification } from "@/lib/email";
+import { evaluate, type Condition, type ConditionType } from "@/lib/condition";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -30,6 +31,8 @@ async function processWatch(watch: {
   notifyEmail: string;
   lastValue: string | null;
   lastHash: string | null;
+  conditionType: string;
+  conditionValue: string | null;
 }): Promise<"changed" | "same" | "error"> {
   const t0 = Date.now();
   const result = await fetchAndExtract(watch.url, watch.selector);
@@ -67,17 +70,27 @@ async function processWatch(watch: {
         newValue: result.value,
       },
     });
-    try {
-      await sendChangeNotification({
-        to: watch.notifyEmail,
-        label: watch.label,
-        url: watch.url,
-        oldValue: watch.lastValue,
-        newValue: result.value,
-        watchId: watch.id,
-      });
-    } catch (e) {
-      console.error("[cron] email send failed", e);
+    const cond: Condition = {
+      type: watch.conditionType as ConditionType,
+      value: watch.conditionValue,
+    };
+    const shouldEmail =
+      cond.type === "change"
+        ? true
+        : !evaluate(watch.lastValue, cond) && evaluate(result.value, cond);
+    if (shouldEmail) {
+      try {
+        await sendChangeNotification({
+          to: watch.notifyEmail,
+          label: watch.label,
+          url: watch.url,
+          oldValue: watch.lastValue,
+          newValue: result.value,
+          watchId: watch.id,
+        });
+      } catch (e) {
+        console.error("[cron] email send failed", e);
+      }
     }
   }
   await db.$transaction([

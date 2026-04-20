@@ -4,18 +4,46 @@ import { z } from "zod";
 import { db } from "@/lib/db";
 import { fetchAndExtract, assertPublicHost } from "@/lib/extract";
 import { rateLimit } from "@/lib/rate-limit";
+import { CONDITION_TYPES, isValidRegex, optionFor, type ConditionType } from "@/lib/condition";
 
 export const runtime = "nodejs";
 
 const MAX_WATCHES_PER_USER = Number(process.env.MAX_WATCHES_PER_USER ?? 50);
 
-const CreateSchema = z.object({
-  label: z.string().min(1).max(100),
-  url: z.string().url().max(2000),
-  selector: z.string().min(1).max(500),
-  notifyEmail: z.string().email().max(200),
-  intervalMinutes: z.number().int().min(15).max(10080).default(60),
-});
+const CreateSchema = z
+  .object({
+    label: z.string().min(1).max(100),
+    url: z.string().url().max(2000),
+    selector: z.string().min(1).max(500),
+    notifyEmail: z.string().email().max(200),
+    intervalMinutes: z.number().int().min(15).max(10080).default(60),
+    conditionType: z.enum(CONDITION_TYPES).default("change"),
+    conditionValue: z.string().max(500).nullable().optional(),
+  })
+  .superRefine(refineCondition);
+
+function refineCondition(
+  data: { conditionType: ConditionType; conditionValue?: string | null },
+  ctx: z.RefinementCtx,
+) {
+  const opt = optionFor(data.conditionType);
+  if (!opt.needsValue) {
+    data.conditionValue = null;
+    return;
+  }
+  const v = data.conditionValue?.trim() ?? "";
+  if (!v) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["conditionValue"], message: "Value required" });
+    return;
+  }
+  if (data.conditionType === "regex" && !isValidRegex(v)) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["conditionValue"], message: "Invalid regex" });
+  }
+  if (opt.valueKind === "number" && !Number.isFinite(Number(v))) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["conditionValue"], message: "Must be a number" });
+  }
+  data.conditionValue = v;
+}
 
 export async function GET() {
   const userId = await getSessionEmail();
@@ -53,7 +81,7 @@ export async function POST(req: NextRequest) {
   if (!parsed.success) {
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
   }
-  const { label, url, selector, notifyEmail, intervalMinutes } = parsed.data;
+  const { label, url, selector, notifyEmail, intervalMinutes, conditionType, conditionValue } = parsed.data;
 
   let parsedUrl: URL;
   try {
@@ -87,6 +115,8 @@ export async function POST(req: NextRequest) {
       lastError: initial.ok ? null : initial.error,
       lastCheckedAt: new Date(),
       intervalMinutes,
+      conditionType,
+      conditionValue: conditionValue ?? null,
     },
   });
   return NextResponse.json({ watch }, { status: 201 });

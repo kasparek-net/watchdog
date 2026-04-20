@@ -21,6 +21,8 @@ model Watch {
   lastError     String?
   isActive      Boolean   @default(true)
   intervalMinutes Int     @default(60)
+  conditionType   String  @default("change")
+  conditionValue  String?
   createdAt     DateTime  @default(now())
   changes       Change[]
   checks        Check[]
