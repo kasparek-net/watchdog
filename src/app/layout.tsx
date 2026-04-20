@@ -33,9 +33,12 @@ export default async function RootLayout({
       <body className="min-h-full flex flex-col bg-neutral-50 text-neutral-900 dark:bg-neutral-950 dark:text-neutral-100">
         <header className="border-b border-neutral-200 dark:border-neutral-800 bg-white/70 dark:bg-neutral-900/70 backdrop-blur sticky top-0 z-10">
           <div className="max-w-5xl mx-auto px-4 h-14 flex items-center justify-between">
-            <Link href="/" className="flex items-center gap-2 font-semibold tracking-tight">
-              <Image src="/icon.svg" alt="" width={28} height={28} className="shrink-0" priority />
-              Pagedog
+            <Link
+              href="/"
+              aria-label="Pagedog"
+              className="flex items-center text-neutral-900 dark:text-neutral-100"
+            >
+              <Image src="/logo.svg" alt="Pagedog" width={135} height={44} className="h-9 w-auto" priority />
             </Link>
             <nav className="flex items-center gap-3 text-sm">
               <ThemeToggle initialTheme={theme} />
