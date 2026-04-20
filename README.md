@@ -6,7 +6,7 @@
 [![Built with Next.js](https://img.shields.io/badge/Next.js-16-black?logo=nextdotjs)](https://nextjs.org)
 [![Deploy on Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/kasparek-net/pagedog)
 
-> This is a template for your own self-hosted instance. **I don't run a public hosted version** — fork it and deploy your own (free on Vercel + Neon + Resend + Clerk).
+> This is a template for your own self-hosted instance. **I don't run a public hosted version** — fork it and deploy your own (free on Vercel + Neon + Resend).
 
 Self-hosted website change watcher. Paste a URL, click the element you want to track, and Pagedog checks it every hour. When the text changes, you get an email. Product back-in-stock alerts, price drops, status page changes — without paying Visualping or Distill.io every month.
 
@@ -15,13 +15,13 @@ Self-hosted website change watcher. Paste a URL, click the element you want to t
 - 🖱 **Visual picker** — hover inside the page preview, click, and the app remembers a unique CSS selector.
 - ⏰ **Hourly checks** via GitHub Actions cron (free).
 - 📧 **Email notifications** via Resend (3,000 emails/month on the free tier).
-- 👥 **Multi-user** — each user has their own watches and notification email (Clerk auth).
-- 🔒 **Safe defaults** — sandboxed iframe picker, SSRF protection with DNS-rebind check, per-user rate limits, timing-safe cron secret.
-- 💸 **Free forever** on Vercel Hobby + Neon free tier + Resend free tier + Clerk free tier.
+- 👥 **Multi-user** — each user has their own watches and notification email. Sign-in is a passwordless magic link (no passwords to store); access is gated by an `ALLOWED_EMAILS` allowlist so only you (or whoever you invite) can sign up.
+- 🔒 **Safe defaults** — sandboxed iframe picker, SSRF protection with DNS-rebind check, per-user rate limits, timing-safe cron secret, HMAC-signed session cookies.
+- 💸 **Free forever** on Vercel Hobby + Neon free tier + Resend free tier.
 
 ## Stack
 
-Next.js 16 (App Router) · TypeScript · Tailwind v4 · Prisma · Postgres · Clerk · Resend · cheerio.
+Next.js 16 (App Router) · TypeScript · Tailwind v4 · Prisma · Postgres · Resend · cheerio. Auth is a small in-house magic-link flow (HMAC-signed tokens, no third-party dependency).
 
 ## Quick start (local)
 
@@ -30,12 +30,12 @@ git clone https://github.com/kasparek-net/pagedog
 cd pagedog
 npm install
 cp .env.example .env
-# fill in DATABASE_URL, NEXT_PUBLIC_CLERK_*, CLERK_SECRET_KEY, RESEND_API_KEY, CRON_SECRET
+# fill in DATABASE_URL, AUTH_SECRET, ALLOWED_EMAILS, RESEND_API_KEY, CRON_SECRET
 npm run db:push          # creates tables in your DB
 npm run dev
 ```
 
-Open <http://localhost:3000>, sign up via Clerk, and create your first watch.
+Open <http://localhost:3000>, enter an email from `ALLOWED_EMAILS`, and click the magic link you receive to sign in.
 
 Trigger a check manually:
 
@@ -47,10 +47,21 @@ curl -X POST http://localhost:3000/api/cron/check \
 ## Deploy to Vercel
 
 1. Fork this repo and connect it to Vercel (or click "Deploy on Vercel" above).
-2. Vercel Marketplace → add **Neon Postgres**, **Clerk**, **Resend** (env vars are wired automatically).
-3. Add `CRON_SECRET` (`openssl rand -hex 32`) and `APP_URL` (e.g. `https://pagedog.vercel.app`).
+2. Vercel Marketplace → add **Neon Postgres** and **Resend** (env vars are wired automatically).
+3. Add the remaining env vars in Vercel → Project → Settings → Environment Variables:
+   - `AUTH_SECRET` (`openssl rand -hex 32`) — HMAC key for magic links and sessions
+   - `ALLOWED_EMAILS` — comma-separated list of emails allowed to sign in
+   - `CRON_SECRET` (`openssl rand -hex 32`) — bearer token for `/api/cron/check`
+   - `APP_URL` (e.g. `https://pagedog.vercel.app`) — used in emailed links
+   - `RESEND_FROM` — sender identity, e.g. `Pagedog <noreply@yourdomain.tld>`
 4. After the first deploy: `vercel env pull && npm run db:push`.
 5. GitHub repo → Settings → Secrets and variables → Actions → add `APP_URL` and `CRON_SECRET`. The `.github/workflows/cron.yml` workflow will then hit `/api/cron/check` every hour.
+
+## Auth flow
+
+- Visit `/sign-in`, enter your email → `POST /api/auth/request` checks `ALLOWED_EMAILS`, mints a HMAC-signed magic token (15 min TTL), and emails the link via Resend.
+- The link goes to `GET /api/auth/verify?token=…`, which verifies the HMAC and sets a signed session cookie (`pd_session`) valid for one year with rolling renewal.
+- No passwords are stored. No third-party auth SDK. If `AUTH_SECRET` is rotated, all existing sessions are invalidated.
 
 ## How the picker works
 
@@ -68,9 +79,11 @@ Limitation: client-rendered SPAs (React/Vue) don't hydrate inside the sandboxed 
 
 ## Security
 
-- `/api/preview` and `POST /api/watches` are rate-limited per user.
-- The URL fetcher (`/api/preview`, watch creation) blocks private IP ranges and localhost — a DNS lookup runs before the fetch to defeat DNS rebinding.
-- The iframe picker runs with `sandbox="allow-scripts"` — no access to user session.
+- Sign-in is gated by `ALLOWED_EMAILS` — emails not on the list are rejected at `/api/auth/request` (403). Keep this list short.
+- Magic-link tokens are HMAC-signed (`AUTH_SECRET`), scoped to an email, and expire after 15 minutes. Session cookies use the same HMAC, `httpOnly` + `SameSite=Lax`, and are rotated when they near expiry.
+- `/api/preview` and `POST /api/watches` are rate-limited per user; `/api/auth/request` is rate-limited per IP.
+- The URL fetcher (`/api/preview`, watch creation, cron) blocks private IP ranges and localhost — a DNS lookup runs before the fetch to defeat DNS rebinding.
+- The iframe picker runs with `sandbox="allow-scripts"` (no `allow-same-origin`) — no access to user session.
 - `CRON_SECRET` is compared timing-safely. Without it set, the endpoint returns 503.
 - Per-user watch count cap (`MAX_WATCHES_PER_USER`, default 50).
 
