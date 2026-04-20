@@ -76,9 +76,10 @@ export async function GET(req: NextRequest) {
   if ($("base").length === 0) {
     $("head").prepend(`<base href="${url.toString()}">`);
   }
+  const origin = req.nextUrl.origin;
   $("head").append(
     `<style>html,body{margin:0}</style>` +
-      `<script src="/picker.js"></script>`,
+      `<script src="${origin}/picker.js"></script>`,
   );
 
   const out = $.html();
