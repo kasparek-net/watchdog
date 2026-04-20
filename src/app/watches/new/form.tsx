@@ -143,10 +143,13 @@ export default function NewWatchForm({ defaultEmail }: { defaultEmail: string })
               srcDoc={previewHtml}
               sandbox="allow-scripts"
               className="w-full bg-white"
-              style={{ height: "calc(100vh - 380px)", minHeight: "400px" }}
+              style={{ height: "calc(100vh - 380px)", minHeight: "600px" }}
               title="Náhled stránky"
             />
           </div>
+          <p className="text-xs text-neutral-500">
+            Pokud je náhled prázdný nebo chybí obsah, stránka se renderuje JavaScriptem a picker ji neumí otevřít — selector zadej ručně.
+          </p>
 
           <div className="space-y-2">
             <div className="flex items-center gap-2">

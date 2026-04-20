@@ -3,6 +3,7 @@ import * as cheerio from "cheerio";
 import { auth } from "@clerk/nextjs/server";
 import { fetchHtml, extractFromHtml, assertPublicHost } from "@/lib/extract";
 import { rateLimit } from "@/lib/rate-limit";
+import { PICKER_JS } from "@/lib/picker-source";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -66,6 +67,7 @@ export async function GET(req: NextRequest) {
   $("noscript").remove();
   $("link[rel='preload'][as='script']").remove();
   $("link[rel='modulepreload']").remove();
+  $("meta[http-equiv]").remove();
   $("*").each((_, el) => {
     const attribs = (el as { attribs?: Record<string, string> }).attribs ?? {};
     for (const k of Object.keys(attribs)) {
@@ -76,11 +78,8 @@ export async function GET(req: NextRequest) {
   if ($("base").length === 0) {
     $("head").prepend(`<base href="${url.toString()}">`);
   }
-  const origin = req.nextUrl.origin;
-  $("head").append(
-    `<style>html,body{margin:0}</style>` +
-      `<script src="${origin}/picker.js"></script>`,
-  );
+  const pickerScript = `<script>${PICKER_JS.replace(/<\/script>/gi, "<\\/script>")}</script>`;
+  $("head").append(`<style>html,body{margin:0}</style>` + pickerScript);
 
   const out = $.html();
   return new NextResponse(out, {
