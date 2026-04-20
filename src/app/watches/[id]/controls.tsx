@@ -50,40 +50,55 @@ export default function WatchControls({
   }
 
   return (
-    <div className="rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 p-4 space-y-3">
-      <div className="grid sm:grid-cols-3 gap-3">
-        <input
-          value={label}
-          onChange={(e) => setLabel(e.target.value)}
-          onBlur={() => label !== initialLabel && patch({ label })}
-          placeholder="Label"
-          className="rounded-md border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 px-3 py-2 text-sm outline-none"
-        />
-        <input
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          onBlur={() => email !== initialEmail && patch({ notifyEmail: email })}
-          placeholder="Email"
-          className="rounded-md border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 px-3 py-2 text-sm outline-none"
-        />
-        <select
-          value={interval}
-          onChange={(e) => {
-            const v = Number(e.target.value);
-            setIntervalValue(v);
-            patch({ intervalMinutes: v });
-          }}
-          className="rounded-md border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 px-3 py-2 text-sm outline-none"
-        >
-          {INTERVAL_OPTIONS.map((o) => (
-            <option key={o.value} value={o.value}>
-              Every {o.label}
-            </option>
-          ))}
-        </select>
+    <div className="rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 p-5 space-y-5">
+      <div className="grid sm:grid-cols-2 gap-4">
+        <Field label="Label">
+          <input
+            value={label}
+            onChange={(e) => setLabel(e.target.value)}
+            onBlur={() => label !== initialLabel && patch({ label })}
+            placeholder="Label"
+            className="w-full rounded-md border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-brand"
+          />
+        </Field>
+        <Field label="Notify email">
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            onBlur={() => email !== initialEmail && patch({ notifyEmail: email })}
+            placeholder="Email"
+            className="w-full rounded-md border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-brand"
+          />
+        </Field>
       </div>
-      <div className="flex flex-wrap gap-2">
+      <Field label="Check every">
+        <div className="inline-flex flex-wrap gap-1 rounded-lg border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 p-1">
+          {INTERVAL_OPTIONS.map((o) => {
+            const active = o.value === interval;
+            return (
+              <button
+                type="button"
+                key={o.value}
+                disabled={busy}
+                onClick={() => {
+                  setIntervalValue(o.value);
+                  patch({ intervalMinutes: o.value });
+                }}
+                className={
+                  "px-3 py-1.5 text-xs rounded-md transition disabled:opacity-50 " +
+                  (active
+                    ? "bg-brand text-black font-medium"
+                    : "text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800")
+                }
+              >
+                {o.label}
+              </button>
+            );
+          })}
+        </div>
+      </Field>
+      <div className="flex flex-wrap gap-2 pt-2 border-t border-neutral-200 dark:border-neutral-800">
         <button
           disabled={busy}
           onClick={() => patch({ isActive: !isActive })}
@@ -100,5 +115,16 @@ export default function WatchControls({
         </button>
       </div>
     </div>
+  );
+}
+
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <label className="block">
+      <span className="block text-xs font-medium text-neutral-600 dark:text-neutral-400 mb-1.5">
+        {label}
+      </span>
+      {children}
+    </label>
   );
 }

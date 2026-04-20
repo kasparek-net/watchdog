@@ -51,9 +51,9 @@ export default function NewWatchForm({ defaultEmail }: { defaultEmail: string })
         );
         const j = await res.json();
         if (j.ok) setTest({ status: "ok", value: j.value });
-        else setTest({ status: "error", error: j.error ?? "Selector nesedí" });
+        else setTest({ status: "error", error: j.error ?? "Selector did not match" });
       } catch (err) {
-        setTest({ status: "error", error: err instanceof Error ? err.message : "Chyba" });
+        setTest({ status: "error", error: err instanceof Error ? err.message : "Error" });
       }
     }, 500);
     return () => clearTimeout(handle);
@@ -70,7 +70,7 @@ export default function NewWatchForm({ defaultEmail }: { defaultEmail: string })
     try {
       const res = await fetch(`/api/preview?url=${encodeURIComponent(url)}`);
       if (!res.ok) {
-        const j = await res.json().catch(() => ({ error: "Načtení selhalo" }));
+        const j = await res.json().catch(() => ({ error: "Failed to load" }));
         setPreviewError(j.error ?? `HTTP ${res.status}`);
         return;
       }
@@ -78,10 +78,10 @@ export default function NewWatchForm({ defaultEmail }: { defaultEmail: string })
       setPreviewHtml(html);
       try {
         const u = new URL(url);
-        if (!label) setLabel(u.hostname);
+        if (!label) setLabel(u.hostname.replace(/^www\./, ""));
       } catch {}
     } catch (err) {
-      setPreviewError(err instanceof Error ? err.message : "Chyba");
+      setPreviewError(err instanceof Error ? err.message : "Error");
     } finally {
       setLoadingPreview(false);
     }
@@ -98,15 +98,15 @@ export default function NewWatchForm({ defaultEmail }: { defaultEmail: string })
         body: JSON.stringify({ label, url, selector, notifyEmail: email, intervalMinutes }),
       });
       if (!res.ok) {
-        const j = await res.json().catch(() => ({ error: "Uložení selhalo" }));
-        setSubmitError(typeof j.error === "string" ? j.error : "Uložení selhalo");
+        const j = await res.json().catch(() => ({ error: "Failed to save" }));
+        setSubmitError(typeof j.error === "string" ? j.error : "Failed to save");
         return;
       }
       const j = await res.json();
       router.push(`/watches/${j.watch.id}`);
       router.refresh();
     } catch (err) {
-      setSubmitError(err instanceof Error ? err.message : "Chyba");
+      setSubmitError(err instanceof Error ? err.message : "Error");
     } finally {
       setSubmitting(false);
     }
@@ -115,115 +115,115 @@ export default function NewWatchForm({ defaultEmail }: { defaultEmail: string })
   const canSave = !!selector && !!label && !!email && !submitting;
 
   return (
-    <div className="space-y-4">
-      <form onSubmit={loadPreview} className="flex gap-2">
-        <input
-          type="url"
-          required
-          value={url}
-          onChange={(e) => setUrl(e.target.value)}
-          placeholder="https://shop.com/product"
-          className="flex-1 rounded-md border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-neutral-900 dark:focus:ring-neutral-100"
-        />
-        <button
-          type="submit"
-          disabled={loadingPreview || !url}
-          className="shrink-0 rounded-md bg-neutral-900 dark:bg-neutral-100 dark:text-neutral-900 text-white px-4 py-2 text-sm font-medium hover:opacity-90 disabled:opacity-50"
-        >
-          {loadingPreview ? "Loading…" : previewHtml ? "Reload" : "Load"}
-        </button>
-      </form>
-      {previewError && (
-        <div className="text-sm text-red-600">{previewError}</div>
-      )}
+    <div className="space-y-8 pb-24">
+      <Section step={1} title="Page" hint="Enter a URL and we'll fetch a snapshot for you to pick from.">
+        <form onSubmit={loadPreview} className="flex gap-2">
+          <input
+            type="url"
+            required
+            value={url}
+            onChange={(e) => setUrl(e.target.value)}
+            placeholder="https://shop.com/product"
+            className="flex-1 rounded-md border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-brand"
+          />
+          <button
+            type="submit"
+            disabled={loadingPreview || !url}
+            className="shrink-0 rounded-md bg-neutral-900 dark:bg-neutral-100 dark:text-neutral-900 text-white px-4 py-2.5 text-sm font-medium hover:opacity-90 disabled:opacity-50"
+          >
+            {loadingPreview ? "Loading…" : previewHtml ? "Reload" : "Load"}
+          </button>
+        </form>
+        {previewError && <div className="text-sm text-red-600 mt-2">{previewError}</div>}
+      </Section>
 
       {previewHtml && (
         <>
-          <div className="rounded-xl border border-neutral-200 dark:border-neutral-800 overflow-hidden bg-white shadow-sm">
-            <iframe
-              ref={iframeRef}
-              srcDoc={previewHtml}
-              sandbox="allow-scripts"
-              className="w-full bg-white"
-              style={{ height: "calc(100vh - 380px)", minHeight: "600px" }}
-              title="Page preview"
-            />
-          </div>
-          <p className="text-xs text-neutral-500">
-            If the preview looks empty, the page is rendered by JavaScript — the picker can&apos;t see dynamic content. Type the selector by hand.
-          </p>
-
-          <div className="space-y-2">
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-medium text-neutral-600 dark:text-neutral-400 shrink-0">
-                Selector
-              </span>
-              <input
-                value={selector}
-                onChange={(e) => setSelector(e.target.value)}
-                placeholder="Click an element in the preview or type a selector"
-                className="flex-1 font-mono text-xs rounded-md border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 px-3 py-2 outline-none focus:ring-2 focus:ring-neutral-900 dark:focus:ring-neutral-100"
+          <Section
+            step={2}
+            title="Element"
+            hint="Hover the page below, click what you want to track, then press ✓ Use in the picker."
+          >
+            <div className="rounded-xl border border-neutral-200 dark:border-neutral-800 overflow-hidden bg-white shadow-sm">
+              <iframe
+                ref={iframeRef}
+                srcDoc={previewHtml}
+                sandbox="allow-scripts"
+                className="w-full bg-white"
+                style={{ height: "calc(100vh - 380px)", minHeight: "600px" }}
+                title="Page preview"
               />
-              <TestBadge state={test} />
             </div>
-            <div className="text-sm rounded-md border border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-900 px-3 py-2 min-h-[38px] font-mono text-xs">
-              {test.status === "ok" ? (
-                test.value
-              ) : test.status === "error" ? (
-                <span className="text-red-600">{test.error}</span>
-              ) : test.status === "loading" ? (
-                <span className="text-neutral-400">Testing selector…</span>
-              ) : pickedText ? (
-                pickedText
-              ) : (
-                <span className="text-neutral-400">— waiting for a selector —</span>
-              )}
+            <p className="text-xs text-neutral-500 mt-2">
+              Empty preview? The page is rendered by JavaScript — type the selector by hand.
+            </p>
+            <div className="mt-4 space-y-2">
+              <div className="flex items-center gap-2">
+                <input
+                  value={selector}
+                  onChange={(e) => setSelector(e.target.value)}
+                  placeholder="CSS selector — clicks above fill this in"
+                  className="flex-1 font-mono text-xs rounded-md border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 px-3 py-2.5 outline-none focus:ring-2 focus:ring-brand"
+                />
+                <TestBadge state={test} />
+              </div>
+              <div className="text-sm rounded-md border border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-900 px-3 py-2.5 min-h-[42px] font-mono text-xs">
+                {test.status === "ok" ? (
+                  test.value
+                ) : test.status === "error" ? (
+                  <span className="text-red-600">{test.error}</span>
+                ) : test.status === "loading" ? (
+                  <span className="text-neutral-400">Testing selector…</span>
+                ) : pickedText ? (
+                  pickedText
+                ) : (
+                  <span className="text-neutral-400">— waiting for a selector —</span>
+                )}
+              </div>
             </div>
-          </div>
+          </Section>
 
-          <div className="grid sm:grid-cols-3 gap-3 pt-2 border-t border-neutral-200 dark:border-neutral-800">
-            <Field label="Label">
-              <input
-                required
-                value={label}
-                onChange={(e) => setLabel(e.target.value)}
-                placeholder="Foo back in stock"
-                className="w-full rounded-md border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 px-3 py-2 text-sm outline-none"
-              />
-            </Field>
-            <Field label="Notify email">
-              <input
-                type="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full rounded-md border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 px-3 py-2 text-sm outline-none"
-              />
-            </Field>
+          <Section step={3} title="Settings" hint="Name it, choose where notifications go and how often we should check.">
+            <div className="grid sm:grid-cols-2 gap-4">
+              <Field label="Label">
+                <input
+                  required
+                  value={label}
+                  onChange={(e) => setLabel(e.target.value)}
+                  placeholder="Product back in stock"
+                  className="w-full rounded-md border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-brand"
+                />
+              </Field>
+              <Field label="Notify email">
+                <input
+                  type="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full rounded-md border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-brand"
+                />
+              </Field>
+            </div>
             <Field label="Check every">
-              <select
-                value={intervalMinutes}
-                onChange={(e) => setIntervalMinutes(Number(e.target.value))}
-                className="w-full rounded-md border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 px-3 py-2 text-sm outline-none"
-              >
-                {INTERVAL_OPTIONS.map((o) => (
-                  <option key={o.value} value={o.value}>
-                    {o.label}
-                  </option>
-                ))}
-              </select>
+              <IntervalGroup value={intervalMinutes} onChange={setIntervalMinutes} />
             </Field>
-          </div>
+          </Section>
 
-          <div className="sticky bottom-0 -mx-4 px-4 py-3 bg-neutral-50/90 dark:bg-neutral-950/90 backdrop-blur border-t border-neutral-200 dark:border-neutral-800 flex items-center justify-between">
-            <div className="text-xs text-neutral-500">
-              {selector ? "Ready to save" : "Pick an element in the preview"}
+          <div className="sticky bottom-0 -mx-4 px-4 py-3 bg-neutral-50/95 dark:bg-neutral-950/95 backdrop-blur border-t border-neutral-200 dark:border-neutral-800 flex items-center justify-between gap-4">
+            <div className="text-xs text-neutral-500 truncate">
+              {selector ? (
+                <>
+                  Saving <code className="font-mono text-neutral-700 dark:text-neutral-300">{selector}</code>
+                </>
+              ) : (
+                "Pick an element above to enable save"
+              )}
             </div>
             <button
               type="button"
               onClick={save}
               disabled={!canSave}
-              className="rounded-md bg-brand text-black px-5 py-2 text-sm font-medium hover:bg-brand-dark disabled:opacity-50"
+              className="shrink-0 rounded-md bg-brand text-black px-5 py-2.5 text-sm font-semibold hover:bg-brand-dark disabled:opacity-40 disabled:cursor-not-allowed"
             >
               {submitting ? "Saving…" : "Save watch"}
             </button>
@@ -231,6 +231,57 @@ export default function NewWatchForm({ defaultEmail }: { defaultEmail: string })
           {submitError && <div className="text-sm text-red-600">{submitError}</div>}
         </>
       )}
+    </div>
+  );
+}
+
+function Section({
+  step,
+  title,
+  hint,
+  children,
+}: {
+  step: number;
+  title: string;
+  hint?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <section>
+      <header className="flex items-baseline gap-3 mb-3">
+        <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-neutral-900 dark:bg-neutral-100 text-white dark:text-neutral-900 text-xs font-semibold">
+          {step}
+        </span>
+        <h2 className="text-base font-semibold tracking-tight">{title}</h2>
+        {hint && <p className="text-xs text-neutral-500 hidden sm:block">{hint}</p>}
+      </header>
+      {hint && <p className="text-xs text-neutral-500 mb-3 sm:hidden">{hint}</p>}
+      {children}
+    </section>
+  );
+}
+
+function IntervalGroup({ value, onChange }: { value: number; onChange: (v: number) => void }) {
+  return (
+    <div className="inline-flex flex-wrap gap-1 rounded-lg border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 p-1">
+      {INTERVAL_OPTIONS.map((o) => {
+        const active = o.value === value;
+        return (
+          <button
+            type="button"
+            key={o.value}
+            onClick={() => onChange(o.value)}
+            className={
+              "px-3 py-1.5 text-xs rounded-md transition " +
+              (active
+                ? "bg-brand text-black font-medium"
+                : "text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800")
+            }
+          >
+            {o.label}
+          </button>
+        );
+      })}
     </div>
   );
 }
@@ -244,7 +295,7 @@ function TestBadge({ state }: { state: TestState }) {
     );
   if (state.status === "ok")
     return (
-      <span className="text-xs px-2 py-1 rounded bg-brand text-black shrink-0">
+      <span className="text-xs px-2 py-1 rounded bg-brand text-black shrink-0 font-medium">
         ✓ Match
       </span>
     );
@@ -260,7 +311,7 @@ function TestBadge({ state }: { state: TestState }) {
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <label className="block">
-      <span className="block text-xs font-medium text-neutral-600 dark:text-neutral-400 mb-1">
+      <span className="block text-xs font-medium text-neutral-600 dark:text-neutral-400 mb-1.5">
         {label}
       </span>
       {children}
