@@ -13,7 +13,7 @@ export async function fetchHtml(url: string, timeoutMs = 15000): Promise<string>
   const res = await fetch(url, {
     headers: {
       "User-Agent":
-        "WatchdogBot/1.0 (+https://github.com/kasparek-net/watchdog)",
+        "PagedogBot/1.0 (+https://github.com/kasparek-net/pagedog)",
       Accept: "text/html,application/xhtml+xml",
       "Accept-Language": "cs,en;q=0.9",
     },

@@ -1,12 +1,12 @@
-# Watchdog
+# Pagedog
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-black.svg)](LICENSE)
 [![Built with Next.js](https://img.shields.io/badge/Next.js-16-black?logo=nextdotjs)](https://nextjs.org)
-[![Deploy on Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/kasparek-net/watchdog)
+[![Deploy on Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/kasparek-net/pagedog)
 
 > This is a template for your own self-hosted instance. **I don't run a public hosted version** — fork it and deploy your own (free on Vercel + Neon + Resend + Clerk).
 
-Self-hosted website change watcher. Paste a URL, click the element you want to track, and Watchdog checks it every hour. When the text changes, you get an email. Product back-in-stock alerts, price drops, status page changes — without paying Visualping or Distill.io every month.
+Self-hosted website change watcher. Paste a URL, click the element you want to track, and Pagedog checks it every hour. When the text changes, you get an email. Product back-in-stock alerts, price drops, status page changes — without paying Visualping or Distill.io every month.
 
 ## Features
 
@@ -24,8 +24,8 @@ Next.js 16 (App Router) · TypeScript · Tailwind v4 · Prisma · Postgres · Cl
 ## Quick start (local)
 
 ```bash
-git clone https://github.com/kasparek-net/watchdog
-cd watchdog
+git clone https://github.com/kasparek-net/pagedog
+cd pagedog
 npm install
 cp .env.example .env
 # fill in DATABASE_URL, NEXT_PUBLIC_CLERK_*, CLERK_SECRET_KEY, RESEND_API_KEY, CRON_SECRET
@@ -46,7 +46,7 @@ curl -X POST http://localhost:3000/api/cron/check \
 
 1. Fork this repo and connect it to Vercel (or click "Deploy on Vercel" above).
 2. Vercel Marketplace → add **Neon Postgres**, **Clerk**, **Resend** (env vars are wired automatically).
-3. Add `CRON_SECRET` (`openssl rand -hex 32`) and `APP_URL` (e.g. `https://watchdog.vercel.app`).
+3. Add `CRON_SECRET` (`openssl rand -hex 32`) and `APP_URL` (e.g. `https://pagedog.vercel.app`).
 4. After the first deploy: `vercel env pull && npm run db:push`.
 5. GitHub repo → Settings → Secrets and variables → Actions → add `APP_URL` and `CRON_SECRET`. The `.github/workflows/cron.yml` workflow will then hit `/api/cron/check` every hour.
 

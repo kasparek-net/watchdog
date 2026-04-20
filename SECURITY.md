@@ -2,7 +2,7 @@
 
 ## Reporting a vulnerability
 
-If you find a security issue, **please don't open a public issue.** Instead, use [GitHub Security Advisories](https://github.com/kasparek-net/watchdog/security/advisories/new) to report it privately.
+If you find a security issue, **please don't open a public issue.** Instead, use [GitHub Security Advisories](https://github.com/kasparek-net/pagedog/security/advisories/new) to report it privately.
 
 We'll acknowledge within a few days and aim to ship a fix or mitigation as soon as possible.
 

@@ -4,7 +4,7 @@ import { ClerkProvider, Show, UserButton } from "@clerk/nextjs";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Watchdog",
+  title: "Pagedog",
   description: "Hlídá změny na webových stránkách a posílá ti email.",
 };
 
@@ -18,7 +18,7 @@ export default function RootLayout({
           <header className="border-b border-neutral-200 dark:border-neutral-800 bg-white/70 dark:bg-neutral-900/70 backdrop-blur sticky top-0 z-10">
             <div className="max-w-5xl mx-auto px-4 h-14 flex items-center justify-between">
               <Link href="/" className="font-semibold tracking-tight">
-                Watchdog
+                Pagedog
               </Link>
               <nav className="flex items-center gap-4 text-sm">
                 <Show when="signed-in">

@@ -1,7 +1,7 @@
 import { Resend } from "resend";
 
 const apiKey = process.env.RESEND_API_KEY;
-const from = process.env.RESEND_FROM ?? "Watchdog <onboarding@resend.dev>";
+const from = process.env.RESEND_FROM ?? "Pagedog <onboarding@resend.dev>";
 
 const resend = apiKey ? new Resend(apiKey) : null;
 
