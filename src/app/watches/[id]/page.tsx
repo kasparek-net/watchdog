@@ -96,6 +96,25 @@ export default async function WatchDetail({
 
       <div>
         <h2 className="text-sm font-semibold text-neutral-600 dark:text-neutral-400 uppercase tracking-wide mb-2">
+          Preview
+        </h2>
+        <div className="rounded-xl border border-neutral-200 dark:border-neutral-800 overflow-hidden bg-white shadow-sm">
+          <iframe
+            src={`/api/preview?url=${encodeURIComponent(watch.url)}&mode=view&selector=${encodeURIComponent(watch.selector)}`}
+            sandbox="allow-scripts"
+            loading="lazy"
+            className="w-full bg-white"
+            style={{ height: "500px" }}
+            title="Watched page preview"
+          />
+        </div>
+        <p className="text-xs text-neutral-500 mt-2">
+          Highlighted yellow box is the element being tracked. Cached page from a fresh fetch.
+        </p>
+      </div>
+
+      <div>
+        <h2 className="text-sm font-semibold text-neutral-600 dark:text-neutral-400 uppercase tracking-wide mb-2">
           Change history
         </h2>
         {changes.length === 0 ? (

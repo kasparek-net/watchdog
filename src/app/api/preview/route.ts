@@ -8,6 +8,11 @@ import { PICKER_JS } from "@/lib/picker-source";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
+function buildHighlightScript(selector: string): string {
+  const safe = JSON.stringify(selector);
+  return `(function(){function go(){try{var el=document.querySelector(${safe});if(!el)return;var s=document.createElement('style');s.textContent='[data-pd-hl]{outline:3px solid #eabf43!important;outline-offset:3px;background:rgba(234,191,67,0.12)!important;animation:pdHlPulse 1.4s ease-in-out infinite}@keyframes pdHlPulse{0%,100%{outline-color:#eabf43}50%{outline-color:#d4a92e}}html,body{cursor:default!important}a,button{pointer-events:none!important}';document.documentElement.appendChild(s);el.setAttribute('data-pd-hl','1');el.scrollIntoView({block:'center',behavior:'instant'});}catch(e){}}if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',go);}else{go();}})();`;
+}
+
 export async function GET(req: NextRequest) {
   const email = await getSessionEmail();
   if (!email) return new NextResponse("Unauthorized", { status: 401 });
@@ -78,8 +83,13 @@ export async function GET(req: NextRequest) {
   if ($("base").length === 0) {
     $("head").prepend(`<base href="${url.toString()}">`);
   }
-  const pickerScript = `<script>${PICKER_JS.replace(/<\/script>/gi, "<\\/script>")}</script>`;
-  $("head").append(`<style>html,body{margin:0}</style>` + pickerScript);
+
+  const inlineScript =
+    mode === "view" && selector
+      ? buildHighlightScript(selector)
+      : PICKER_JS;
+  const safeScript = inlineScript.replace(/<\/script>/gi, "<\\/script>");
+  $("head").append(`<style>html,body{margin:0}</style><script>${safeScript}</script>`);
 
   const out = $.html();
   return new NextResponse(out, {
