@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 import Script from "next/script";
 import Link from "next/link";
-import Image from "next/image";
 import { getSessionEmail } from "@/lib/session";
 import { getTheme } from "@/lib/theme";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { Logo } from "@/components/logo";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -42,7 +42,7 @@ export default async function RootLayout({
               aria-label="Pagedog"
               className="flex items-center text-neutral-900 dark:text-neutral-100"
             >
-              <Image src="/logo.svg" alt="Pagedog" width={135} height={44} className="h-9 w-auto" priority />
+              <Logo className="h-9 w-auto" />
             </Link>
             <nav className="flex items-center gap-3 text-sm">
               <ThemeToggle initialTheme={theme} />
