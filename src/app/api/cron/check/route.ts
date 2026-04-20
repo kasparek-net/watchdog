@@ -31,6 +31,8 @@ async function processWatch(watch: {
   notifyEmail: string;
   lastValue: string | null;
   lastHash: string | null;
+  imageUrl: string | null;
+  faviconUrl: string | null;
   conditionType: string;
   conditionValue: string | null;
 }): Promise<"changed" | "same" | "error"> {
@@ -57,8 +59,8 @@ async function processWatch(watch: {
         data: {
           lastCheckedAt: new Date(),
           lastError: null,
-          imageUrl: result.imageUrl,
-          faviconUrl: result.faviconUrl,
+          imageUrl: result.imageUrl === watch.imageUrl ? undefined : result.imageUrl,
+          faviconUrl: result.faviconUrl === watch.faviconUrl ? undefined : result.faviconUrl,
         },
       }),
       db.check.create({

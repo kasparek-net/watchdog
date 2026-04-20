@@ -115,7 +115,7 @@ export function extractFromHtml(
   return { ok: true, value: text, hash: sha256(text), imageUrl, faviconUrl };
 }
 
-export function extractOgImage(
+function extractOgImage(
   $: cheerio.CheerioAPI,
   baseUrl: string,
 ): string | null {
@@ -133,7 +133,7 @@ export function extractOgImage(
   return null;
 }
 
-export function extractFavicon(
+function extractFavicon(
   $: cheerio.CheerioAPI,
   baseUrl: string,
 ): string | null {
