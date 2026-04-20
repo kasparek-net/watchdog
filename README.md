@@ -1,36 +1,46 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Watchdog
 
-## Getting Started
+Self-hosted hlídač změn na webových stránkách. Zadáš URL, klikneš na element, aplikace ho hodinu co hodinu zkontroluje a při změně ti pošle email. Sleduj naskladnění zboží, ceny, výskyt textu — bez měsíčních poplatků.
 
-First, run the development server:
+Stack: Next.js 16 (App Router) · TypeScript · Tailwind v4 · Prisma · Postgres · Clerk · Resend.
+
+## Lokální vývoj
 
 ```bash
+npm install
+cp .env.example .env
+# vyplň DATABASE_URL, NEXT_PUBLIC_CLERK_*, CLERK_SECRET_KEY, RESEND_API_KEY
+npm run db:push       # vytvoří tabulky v DB
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Otevři <http://localhost:3000>, registruj se, vytvoř hlídání.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Ruční trigger checku (v jiném terminálu):
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+curl -X POST http://localhost:3000/api/cron/check \
+  -H "Authorization: Bearer $CRON_SECRET"
+```
 
-## Learn More
+## Deploy na Vercel
 
-To learn more about Next.js, take a look at the following resources:
+1. Napushni repo na GitHub a propoj s Vercelem.
+2. Vercel Marketplace → přidej **Neon Postgres**, **Clerk**, **Resend** (env proměnné se napojí automaticky).
+3. Doplň `CRON_SECRET` (`openssl rand -hex 32`) a `APP_URL` (např. `https://watchdog.vercel.app`).
+4. Po prvním deployi spusť migraci: `vercel env pull && npm run db:push`.
+5. V GitHub repo → Settings → Secrets and variables → Actions přidej `APP_URL` a `CRON_SECRET`. Workflow `.github/workflows/cron.yml` pak každou hodinu volá `/api/cron/check`.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Jak funguje picker
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- `/watches/new` → zadáš URL → server stáhne HTML, sanitizuje (žádné `<script>`, `<form>`, `on*` atributy), injectne `<base href>` a `/picker.js`.
+- HTML jde do `<iframe srcdoc>` se `sandbox="allow-scripts"` (bez `allow-same-origin` = izolovaný od session).
+- V iframe `picker.js` na hover obtáhne element červeně, na klik spočítá unikátní CSS selector a pošle ho přes `postMessage` rodičovi.
 
-## Deploy on Vercel
+Limitace: SPA stránky (React/Vue rendered klientem) v iframe nedoběhnou — picker funguje na server-rendered HTML. Pro pokročilé případy lze selector zadat ručně.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Cron flow
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+1. GitHub Actions (každou hodinu) → `POST /api/cron/check` s bearer tokenem.
+2. Endpoint načte všechny aktivní watches, paralelně (limit 5) udělá `fetch` + cheerio extrakci podle CSS selectoru.
+3. Spočítá SHA-256 hash z extrahovaného textu. Když se liší od `lastHash`, vytvoří `Change` row a pošle email přes Resend.

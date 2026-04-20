@@ -1,0 +1,38 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Watch {
+  id            String    @id @default(cuid())
+  userId        String
+  label         String
+  url           String
+  selector      String
+  notifyEmail   String
+  lastValue     String?
+  lastHash      String?
+  lastCheckedAt DateTime?
+  lastError     String?
+  isActive      Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+  changes       Change[]
+
+  @@index([userId])
+  @@index([isActive])
+}
+
+model Change {
+  id         String   @id @default(cuid())
+  watchId    String
+  oldValue   String
+  newValue   String
+  detectedAt DateTime @default(now())
+  watch      Watch    @relation(fields: [watchId], references: [id], onDelete: Cascade)
+
+  @@index([watchId])
+}
