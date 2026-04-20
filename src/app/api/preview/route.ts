@@ -15,7 +15,7 @@ export async function GET(req: NextRequest) {
   const rl = rateLimit("preview", userId, 30, 60_000);
   if (!rl.ok) {
     return NextResponse.json(
-      { error: "Příliš mnoho požadavků, zkus to za chvíli." },
+      { error: "Too many requests. Try again in a moment." },
       {
         status: 429,
         headers: { "Retry-After": Math.ceil(rl.resetMs / 1000).toString() },
@@ -33,7 +33,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Invalid URL" }, { status: 400 });
   }
   if (url.protocol !== "http:" && url.protocol !== "https:") {
-    return NextResponse.json({ error: "Pouze http(s) URL" }, { status: 400 });
+    return NextResponse.json({ error: "Only http(s) URLs are allowed" }, { status: 400 });
   }
   try {
     await assertPublicHost(url.hostname);

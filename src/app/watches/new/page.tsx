@@ -6,10 +6,10 @@ export default async function NewWatchPage() {
   const defaultEmail = user?.primaryEmailAddress?.emailAddress ?? "";
   return (
     <div className="max-w-3xl mx-auto">
-      <h1 className="text-2xl font-semibold tracking-tight mb-1">Nové hlídání</h1>
+      <h1 className="text-2xl font-semibold tracking-tight mb-1">New watch</h1>
       <p className="text-sm text-neutral-500 mb-6">
-        Zadej URL, klikni na element který chceš hlídat, a my tě upozorníme,
-        kdykoli se jeho text změní.
+        Paste a URL, click the element you want to track, and you&apos;ll get an
+        email whenever its text changes.
       </p>
       <NewWatchForm defaultEmail={defaultEmail} />
     </div>

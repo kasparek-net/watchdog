@@ -122,7 +122,7 @@ export default function NewWatchForm({ defaultEmail }: { defaultEmail: string })
           required
           value={url}
           onChange={(e) => setUrl(e.target.value)}
-          placeholder="https://shop.cz/produkt"
+          placeholder="https://shop.com/product"
           className="flex-1 rounded-md border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-neutral-900 dark:focus:ring-neutral-100"
         />
         <button
@@ -130,7 +130,7 @@ export default function NewWatchForm({ defaultEmail }: { defaultEmail: string })
           disabled={loadingPreview || !url}
           className="shrink-0 rounded-md bg-neutral-900 dark:bg-neutral-100 dark:text-neutral-900 text-white px-4 py-2 text-sm hover:opacity-90 disabled:opacity-50"
         >
-          {loadingPreview ? "Načítám…" : previewHtml ? "Načíst znovu" : "Načíst"}
+          {loadingPreview ? "Loading…" : previewHtml ? "Reload" : "Load"}
         </button>
       </form>
       {previewError && (
@@ -146,11 +146,11 @@ export default function NewWatchForm({ defaultEmail }: { defaultEmail: string })
               sandbox="allow-scripts"
               className="w-full bg-white"
               style={{ height: "calc(100vh - 380px)", minHeight: "600px" }}
-              title="Náhled stránky"
+              title="Page preview"
             />
           </div>
           <p className="text-xs text-neutral-500">
-            Pokud je náhled prázdný nebo chybí obsah, stránka se renderuje JavaScriptem a picker ji neumí otevřít — selector zadej ručně.
+            If the preview looks empty, the page is rendered by JavaScript — the picker can&apos;t see dynamic content. Type the selector by hand.
           </p>
 
           <div className="space-y-2">
@@ -161,7 +161,7 @@ export default function NewWatchForm({ defaultEmail }: { defaultEmail: string })
               <input
                 value={selector}
                 onChange={(e) => setSelector(e.target.value)}
-                placeholder="Klikni na element v náhledu nebo napiš selector"
+                placeholder="Click an element in the preview or type a selector"
                 className="flex-1 font-mono text-xs rounded-md border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 px-3 py-2 outline-none focus:ring-2 focus:ring-neutral-900 dark:focus:ring-neutral-100"
               />
               <TestBadge state={test} />
@@ -172,26 +172,26 @@ export default function NewWatchForm({ defaultEmail }: { defaultEmail: string })
               ) : test.status === "error" ? (
                 <span className="text-red-600">{test.error}</span>
               ) : test.status === "loading" ? (
-                <span className="text-neutral-400">Testuji selector…</span>
+                <span className="text-neutral-400">Testing selector…</span>
               ) : pickedText ? (
                 pickedText
               ) : (
-                <span className="text-neutral-400">— čekám na selector —</span>
+                <span className="text-neutral-400">— waiting for a selector —</span>
               )}
             </div>
           </div>
 
           <div className="grid sm:grid-cols-3 gap-3 pt-2 border-t border-neutral-200 dark:border-neutral-800">
-            <Field label="Název">
+            <Field label="Label">
               <input
                 required
                 value={label}
                 onChange={(e) => setLabel(e.target.value)}
-                placeholder="Naskladnění Foo"
+                placeholder="Foo back in stock"
                 className="w-full rounded-md border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 px-3 py-2 text-sm outline-none"
               />
             </Field>
-            <Field label="Notifikační email">
+            <Field label="Notify email">
               <input
                 type="email"
                 required
@@ -200,7 +200,7 @@ export default function NewWatchForm({ defaultEmail }: { defaultEmail: string })
                 className="w-full rounded-md border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 px-3 py-2 text-sm outline-none"
               />
             </Field>
-            <Field label="Kontrolovat každých">
+            <Field label="Check every">
               <select
                 value={intervalMinutes}
                 onChange={(e) => setIntervalMinutes(Number(e.target.value))}
@@ -217,7 +217,7 @@ export default function NewWatchForm({ defaultEmail }: { defaultEmail: string })
 
           <div className="sticky bottom-0 -mx-4 px-4 py-3 bg-neutral-50/90 dark:bg-neutral-950/90 backdrop-blur border-t border-neutral-200 dark:border-neutral-800 flex items-center justify-between">
             <div className="text-xs text-neutral-500">
-              {selector ? "Připraveno k uložení" : "Vyber element v náhledu"}
+              {selector ? "Ready to save" : "Pick an element in the preview"}
             </div>
             <button
               type="button"
@@ -225,7 +225,7 @@ export default function NewWatchForm({ defaultEmail }: { defaultEmail: string })
               disabled={!canSave}
               className="rounded-md bg-emerald-600 text-white px-5 py-2 text-sm font-medium hover:bg-emerald-700 disabled:opacity-50"
             >
-              {submitting ? "Ukládám…" : "Uložit hlídání"}
+              {submitting ? "Saving…" : "Save watch"}
             </button>
           </div>
           {submitError && <div className="text-sm text-red-600">{submitError}</div>}

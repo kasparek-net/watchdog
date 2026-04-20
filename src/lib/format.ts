@@ -1,11 +1,11 @@
 export const INTERVAL_OPTIONS: { value: number; label: string }[] = [
-  { value: 15, label: "15 minut" },
-  { value: 30, label: "30 minut" },
-  { value: 60, label: "1 hodina" },
-  { value: 180, label: "3 hodiny" },
-  { value: 360, label: "6 hodin" },
-  { value: 720, label: "12 hodin" },
-  { value: 1440, label: "1 den" },
+  { value: 15, label: "15 minutes" },
+  { value: 30, label: "30 minutes" },
+  { value: 60, label: "1 hour" },
+  { value: 180, label: "3 hours" },
+  { value: 360, label: "6 hours" },
+  { value: 720, label: "12 hours" },
+  { value: 1440, label: "1 day" },
 ];
 
 export function intervalLabel(minutes: number): string {

@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { auth } from "@clerk/nextjs/server";
 import { db } from "@/lib/db";
 import { intervalLabel, shortenUrl } from "@/lib/format";
+import { Countdown } from "@/components/countdown";
 import WatchControls from "./controls";
 
 export const dynamic = "force-dynamic";
@@ -23,11 +24,15 @@ export default async function WatchDetail({
     take: 50,
   });
 
+  const nextMs = watch.lastCheckedAt
+    ? watch.lastCheckedAt.getTime() + watch.intervalMinutes * 60_000
+    : null;
+
   return (
     <div className="space-y-6">
       <div>
         <Link href="/" className="text-sm text-neutral-500 hover:underline">
-          ← zpět
+          ← back
         </Link>
         <h1 className="mt-1 text-2xl font-semibold tracking-tight">
           {watch.label}
@@ -47,7 +52,7 @@ export default async function WatchDetail({
         <Box title="CSS selector">
           <code className="font-mono text-xs break-all">{watch.selector}</code>
         </Box>
-        <Box title="Aktuální hodnota">
+        <Box title="Current value">
           {watch.lastError ? (
             <span className="text-red-600 text-sm">{watch.lastError}</span>
           ) : (
@@ -56,19 +61,26 @@ export default async function WatchDetail({
             </span>
           )}
         </Box>
-        <Box title="Notifikace na">
+        <Box title="Notify">
           <span className="text-sm">{watch.notifyEmail}</span>
         </Box>
-        <Box title="Stav">
-          <span className="text-sm">
-            {watch.isActive ? "aktivní" : "pauznuto"}
-            {" · interval "}
+        <Box title="Status">
+          <div className="text-sm">
+            {watch.isActive ? "active" : "paused"} · every{" "}
             {intervalLabel(watch.intervalMinutes)}
-            {" · poslední check "}
+          </div>
+          <div className="text-xs text-neutral-500 mt-0.5">
+            last check{" "}
             {watch.lastCheckedAt
-              ? new Date(watch.lastCheckedAt).toLocaleString("cs-CZ")
-              : "nikdy"}
-          </span>
+              ? new Date(watch.lastCheckedAt).toLocaleString("en-US")
+              : "never"}
+            {watch.isActive && nextMs !== null && (
+              <>
+                {" · next "}
+                <Countdown targetMs={nextMs} prefix="in" overdue="due now" />
+              </>
+            )}
+          </div>
         </Box>
       </div>
 
@@ -82,11 +94,11 @@ export default async function WatchDetail({
 
       <div>
         <h2 className="text-sm font-semibold text-neutral-600 dark:text-neutral-400 uppercase tracking-wide mb-2">
-          Historie změn
+          Change history
         </h2>
         {changes.length === 0 ? (
           <div className="rounded-xl border border-dashed border-neutral-300 dark:border-neutral-700 p-6 text-center text-sm text-neutral-500">
-            Zatím žádná změna nebyla zaznamenána.
+            No changes recorded yet.
           </div>
         ) : (
           <ul className="space-y-2">
@@ -96,14 +108,14 @@ export default async function WatchDetail({
                 className="rounded-lg border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 p-3 text-sm"
               >
                 <div className="text-xs text-neutral-500">
-                  {new Date(c.detectedAt).toLocaleString("cs-CZ")}
+                  {new Date(c.detectedAt).toLocaleString("en-US")}
                 </div>
                 <div className="mt-1 grid grid-cols-[60px_1fr] gap-x-3 gap-y-1">
-                  <span className="text-xs text-neutral-500">Bylo:</span>
+                  <span className="text-xs text-neutral-500">Was:</span>
                   <span className="font-mono text-xs break-all line-through opacity-70">
                     {c.oldValue}
                   </span>
-                  <span className="text-xs text-neutral-500">Nyní:</span>
+                  <span className="text-xs text-neutral-500">Now:</span>
                   <span className="font-mono text-xs break-all">{c.newValue}</span>
                 </div>
               </li>

@@ -69,19 +69,19 @@ export const PICKER_JS = String.raw`(function () {
     function k(label) { return el("kbd", { text: label }); }
     function s(t) { return el("span", { text: t }); }
     return el("div", { id: "__wd_top__" }, [
-      s("Klikni na element."), k("ESC"), s("zruš"), k("\u2191\u2193"), s("nav"), k("B"), s("bannery"), k("P"), s("pauza"), k("\u23CE"), s("použít")
+      s("Click an element."), k("ESC"), s("clear"), k("\u2191\u2193"), s("parent/child"), k("B"), s("hide banners"), k("P"), s("pause"), k("\u23CE"), s("use")
     ]);
   }
 
-  var labelEl = el("span", { className: "__wd_label", text: "Klikni na element \u2193" });
+  var labelEl = el("span", { className: "__wd_label", text: "Click an element \u2193" });
   var textEl = el("span", { className: "__wd_text" });
   var countEl = el("span", { className: "__wd_count" });
   countEl.style.display = "none";
-  var upBtn = makeBtn("__wd_up", "\u2191 Rodič", "Vyber nadřazený element ([)");
-  var downBtn = makeBtn("__wd_down", "\u2193 Dítě", "Vyber dceřiný element (])");
-  var banBtn = makeBtn("__wd_ban", "Bannery", "Skryj cookie/banner overlay (B)", false);
-  var pauseBtn = makeBtn("__wd_pause", "Pauza", "Pozastav picker — můžeš listovat (P)", false);
-  var useBtn = makeBtn("__wd_use", "✓ Použít", "Potvrď výběr (Enter)");
+  var upBtn = makeBtn("__wd_up", "\u2191 Parent", "Select the parent element ([)");
+  var downBtn = makeBtn("__wd_down", "\u2193 Child", "Select the child element (])");
+  var banBtn = makeBtn("__wd_ban", "Banners", "Hide cookie/banner overlays (B)", false);
+  var pauseBtn = makeBtn("__wd_pause", "Pause", "Pause picker so you can scroll/click (P)", false);
+  var useBtn = makeBtn("__wd_use", "✓ Use", "Confirm selection (Enter)");
   var bar = el("div", { id: "__wd_bar__" }, [labelEl, textEl, countEl, upBtn, downBtn, banBtn, pauseBtn, useBtn]);
 
   function attach() {
@@ -131,7 +131,7 @@ export const PICKER_JS = String.raw`(function () {
 
   function updateBar() {
     if (!picked) {
-      labelEl.textContent = paused ? "⏸ Pozastaveno" : "Klikni na element \u2193";
+      labelEl.textContent = paused ? "⏸ Paused" : "Click an element \u2193";
       textEl.textContent = "";
       countEl.style.display = "none";
       upBtn.disabled = true;
@@ -177,13 +177,13 @@ export const PICKER_JS = String.raw`(function () {
   function toggleBanners() {
     bannersHidden = !bannersHidden;
     document.documentElement.classList.toggle("__wd_banhide__", bannersHidden);
-    banBtn.textContent = bannersHidden ? "Zobraz bannery" : "Bannery";
+    banBtn.textContent = bannersHidden ? "Show banners" : "Banners";
   }
 
   function togglePause() {
     paused = !paused;
     document.documentElement.classList.toggle("__wd_paused__", paused);
-    pauseBtn.textContent = paused ? "▶ Pokračovat" : "Pauza";
+    pauseBtn.textContent = paused ? "▶ Resume" : "Pause";
     if (paused && hovered) setHover(hovered, false);
     updateBar();
   }

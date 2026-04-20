@@ -35,7 +35,7 @@ export async function POST(req: NextRequest) {
   const rl = rateLimit("watches:create", userId, 10, 60_000);
   if (!rl.ok) {
     return NextResponse.json(
-      { error: "Příliš mnoho požadavků, zkus to za chvíli." },
+      { error: "Too many requests. Try again in a moment." },
       { status: 429, headers: { "Retry-After": Math.ceil(rl.resetMs / 1000).toString() } },
     );
   }
@@ -43,7 +43,7 @@ export async function POST(req: NextRequest) {
   const count = await db.watch.count({ where: { userId } });
   if (count >= MAX_WATCHES_PER_USER) {
     return NextResponse.json(
-      { error: `Limit ${MAX_WATCHES_PER_USER} hlídání na uživatele dosažen.` },
+      { error: `Limit of ${MAX_WATCHES_PER_USER} watches per user reached.` },
       { status: 429 },
     );
   }
@@ -62,7 +62,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Invalid URL" }, { status: 400 });
   }
   if (parsedUrl.protocol !== "http:" && parsedUrl.protocol !== "https:") {
-    return NextResponse.json({ error: "Pouze http(s) URL" }, { status: 400 });
+    return NextResponse.json({ error: "Only http(s) URLs are allowed" }, { status: 400 });
   }
   try {
     await assertPublicHost(parsedUrl.hostname);
