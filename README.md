@@ -2,7 +2,9 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-black.svg)](LICENSE)
 [![Built with Next.js](https://img.shields.io/badge/Next.js-16-black?logo=nextdotjs)](https://nextjs.org)
-[![Deploy on Vercel](https://img.shields.io/badge/Deploy-Vercel-black?logo=vercel)](https://vercel.com/new/clone?repository-url=https://github.com/kasparek-net/watchdog)
+[![Deploy on Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/kasparek-net/watchdog)
+
+> Tohle je template pro vlastní self-hosted instanci. **Veřejnou hostovanou verzi neprovozuju** — forkni a deployni si vlastní (free na Vercel + Neon + Resend + Clerk).
 
 Self-hosted hlídač změn na webových stránkách. Zadáš URL, klikneš na element, a aplikace ho hodinu co hodinu zkontroluje. Když se text změní, dorazí email. Naskladnění zboží, změny cen, výskyt textu — bez měsíčních poplatků placeným službám typu Visualping nebo Distill.io.
 
