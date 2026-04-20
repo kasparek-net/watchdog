@@ -15,6 +15,7 @@ type Watch = {
   lastValue: string | null;
   lastError: string | null;
   lastCheckedAt: string | null;
+  imageUrl: string | null;
   changeCount: number;
 };
 
@@ -51,22 +52,25 @@ export function WatchRow({ watch }: { watch: Watch }) {
     <li className="relative rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 hover:border-neutral-300 dark:hover:border-neutral-700 transition">
       <Link href={`/watches/${watch.id}`} className="block px-4 py-3 pr-14">
         <div className="sm:flex sm:items-center sm:justify-between gap-4">
-          <div className="min-w-0">
-            <div className="flex items-center gap-2">
-              <span className="font-medium truncate">{watch.label}</span>
-              {!active && (
-                <span className="text-xs px-1.5 py-0.5 rounded bg-neutral-200 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400">
-                  paused
-                </span>
-              )}
-              {watch.lastError && (
-                <span className="text-xs px-1.5 py-0.5 rounded bg-red-100 dark:bg-red-950 text-red-700 dark:text-red-400">
-                  error
-                </span>
-              )}
-            </div>
-            <div className="text-xs text-neutral-500 truncate mt-0.5" title={watch.url}>
-              {shortenUrl(watch.url, 60)}
+          <div className="min-w-0 flex items-center gap-3">
+            <Thumbnail src={watch.imageUrl} />
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-2">
+                <span className="font-medium truncate">{watch.label}</span>
+                {!active && (
+                  <span className="text-xs px-1.5 py-0.5 rounded bg-neutral-200 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400">
+                    paused
+                  </span>
+                )}
+                {watch.lastError && (
+                  <span className="text-xs px-1.5 py-0.5 rounded bg-red-100 dark:bg-red-950 text-red-700 dark:text-red-400">
+                    error
+                  </span>
+                )}
+              </div>
+              <div className="text-xs text-neutral-500 truncate mt-0.5" title={watch.url}>
+                {shortenUrl(watch.url, 60)}
+              </div>
             </div>
           </div>
           <div className="mt-2 sm:mt-0 sm:text-right text-xs text-neutral-500 shrink-0">
@@ -98,6 +102,38 @@ export function WatchRow({ watch }: { watch: Watch }) {
         {active ? <PauseIcon /> : <PlayIcon />}
       </button>
     </li>
+  );
+}
+
+function Thumbnail({ src }: { src: string | null }) {
+  const [errored, setErrored] = useState(false);
+  if (!src || errored) {
+    return (
+      <div
+        aria-hidden
+        className="shrink-0 w-12 h-12 rounded-md bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-800 flex items-center justify-center text-neutral-400"
+      >
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+          <rect x="3" y="4" width="18" height="16" rx="2" />
+          <circle cx="9" cy="10" r="1.6" />
+          <path d="m3 17 5-5 4 4 3-3 6 6" />
+        </svg>
+      </div>
+    );
+  }
+  return (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src={src}
+      alt=""
+      width={48}
+      height={48}
+      loading="lazy"
+      decoding="async"
+      referrerPolicy="no-referrer"
+      onError={() => setErrored(true)}
+      className="shrink-0 w-12 h-12 rounded-md object-cover border border-neutral-200 dark:border-neutral-800 bg-neutral-100 dark:bg-neutral-800"
+    />
   );
 }
 

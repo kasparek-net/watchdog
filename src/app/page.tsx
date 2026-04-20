@@ -62,6 +62,7 @@ export default async function HomePage() {
                 lastValue: w.lastValue,
                 lastError: w.lastError,
                 lastCheckedAt: w.lastCheckedAt ? w.lastCheckedAt.toISOString() : null,
+                imageUrl: w.imageUrl,
                 changeCount: w._count.changes,
               }}
             />

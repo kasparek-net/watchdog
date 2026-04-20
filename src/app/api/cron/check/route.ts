@@ -54,7 +54,11 @@ async function processWatch(watch: {
     await db.$transaction([
       db.watch.update({
         where: { id: watch.id },
-        data: { lastCheckedAt: new Date(), lastError: null },
+        data: {
+          lastCheckedAt: new Date(),
+          lastError: null,
+          imageUrl: result.imageUrl,
+        },
       }),
       db.check.create({
         data: { watchId: watch.id, status: "same", value: result.value, durationMs },
@@ -101,6 +105,7 @@ async function processWatch(watch: {
         lastValue: result.value,
         lastHash: result.hash,
         lastError: null,
+        imageUrl: result.imageUrl,
       },
     }),
     db.check.create({

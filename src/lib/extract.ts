@@ -4,7 +4,7 @@ import { lookup } from "node:dns/promises";
 import { isIP } from "node:net";
 
 export type ExtractResult =
-  | { ok: true; value: string; hash: string }
+  | { ok: true; value: string; hash: string; imageUrl: string | null }
   | { ok: false; error: string };
 
 const MAX_BYTES = 5 * 1024 * 1024;
@@ -84,7 +84,11 @@ export async function assertPublicHost(hostname: string): Promise<void> {
   }
 }
 
-export function extractFromHtml(html: string, selector: string): ExtractResult {
+export function extractFromHtml(
+  html: string,
+  selector: string,
+  baseUrl?: string,
+): ExtractResult {
   let $: cheerio.CheerioAPI;
   try {
     $ = cheerio.load(html);
@@ -100,7 +104,39 @@ export function extractFromHtml(html: string, selector: string): ExtractResult {
   if (el.length === 0) return { ok: false, error: "Selector matched no element" };
   const text = el.text().replace(/\s+/g, " ").trim();
   if (!text) return { ok: false, error: "Element is empty" };
-  return { ok: true, value: text, hash: sha256(text) };
+  const imageUrl = baseUrl ? extractOgImage($, baseUrl) : null;
+  return { ok: true, value: text, hash: sha256(text), imageUrl };
+}
+
+export function extractOgImage(
+  $: cheerio.CheerioAPI,
+  baseUrl: string,
+): string | null {
+  const candidates = [
+    $('meta[property="og:image:secure_url"]').attr("content"),
+    $('meta[property="og:image:url"]').attr("content"),
+    $('meta[property="og:image"]').attr("content"),
+    $('meta[name="twitter:image"]').attr("content"),
+    $('meta[name="twitter:image:src"]').attr("content"),
+  ];
+  for (const raw of candidates) {
+    const resolved = resolveImageUrl(raw, baseUrl);
+    if (resolved) return resolved;
+  }
+  return null;
+}
+
+function resolveImageUrl(raw: string | undefined, baseUrl: string): string | null {
+  if (!raw) return null;
+  const trimmed = raw.trim();
+  if (!trimmed) return null;
+  try {
+    const abs = new URL(trimmed, baseUrl);
+    if (abs.protocol !== "http:" && abs.protocol !== "https:") return null;
+    return abs.toString();
+  } catch {
+    return null;
+  }
 }
 
 export async function fetchAndExtract(
@@ -113,7 +149,7 @@ export async function fetchAndExtract(
   } catch (e) {
     return { ok: false, error: e instanceof Error ? e.message : "Fetch failed" };
   }
-  return extractFromHtml(html, selector);
+  return extractFromHtml(html, selector, url);
 }
 
 export function sha256(input: string): string {

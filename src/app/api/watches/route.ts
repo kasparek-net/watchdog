@@ -112,6 +112,7 @@ export async function POST(req: NextRequest) {
       notifyEmail,
       lastValue: initial.ok ? initial.value : null,
       lastHash: initial.ok ? initial.hash : null,
+      imageUrl: initial.ok ? initial.imageUrl : null,
       lastError: initial.ok ? null : initial.error,
       lastCheckedAt: new Date(),
       intervalMinutes,
