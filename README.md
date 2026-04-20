@@ -4,84 +4,84 @@
 [![Built with Next.js](https://img.shields.io/badge/Next.js-16-black?logo=nextdotjs)](https://nextjs.org)
 [![Deploy on Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/kasparek-net/watchdog)
 
-> Tohle je template pro vlastní self-hosted instanci. **Veřejnou hostovanou verzi neprovozuju** — forkni a deployni si vlastní (free na Vercel + Neon + Resend + Clerk).
+> This is a template for your own self-hosted instance. **I don't run a public hosted version** — fork it and deploy your own (free on Vercel + Neon + Resend + Clerk).
 
-Self-hosted hlídač změn na webových stránkách. Zadáš URL, klikneš na element, a aplikace ho hodinu co hodinu zkontroluje. Když se text změní, dorazí email. Naskladnění zboží, změny cen, výskyt textu — bez měsíčních poplatků placeným službám typu Visualping nebo Distill.io.
+Self-hosted website change watcher. Paste a URL, click the element you want to track, and Watchdog checks it every hour. When the text changes, you get an email. Product back-in-stock alerts, price drops, status page changes — without paying Visualping or Distill.io every month.
 
 ## Features
 
-- 🖱 **Vizuální picker** — najedeš myší v náhledu, klikneš a aplikace si zapamatuje CSS selector.
-- ⏰ **Hodinové checky** přes GitHub Actions cron (zdarma).
-- 📧 **Email notifikace** přes Resend (3 000 mailů / měsíc zdarma).
-- 👥 **Multi-user** — každý má svoje hlídání i email (Clerk auth).
-- 🔒 **Bezpečné** — sandboxed iframe picker, SSRF ochrana s DNS-rebind kontrolou, rate limity, timing-safe cron secret.
-- 💸 **Zdarma** na Vercel Hobby + Neon free tier + Resend free tier + Clerk free tier.
+- 🖱 **Visual picker** — hover inside the page preview, click, and the app remembers a unique CSS selector.
+- ⏰ **Hourly checks** via GitHub Actions cron (free).
+- 📧 **Email notifications** via Resend (3,000 emails/month on the free tier).
+- 👥 **Multi-user** — each user has their own watches and notification email (Clerk auth).
+- 🔒 **Safe defaults** — sandboxed iframe picker, SSRF protection with DNS-rebind check, per-user rate limits, timing-safe cron secret.
+- 💸 **Free forever** on Vercel Hobby + Neon free tier + Resend free tier + Clerk free tier.
 
 ## Stack
 
 Next.js 16 (App Router) · TypeScript · Tailwind v4 · Prisma · Postgres · Clerk · Resend · cheerio.
 
-## Quick start (lokální vývoj)
+## Quick start (local)
 
 ```bash
 git clone https://github.com/kasparek-net/watchdog
 cd watchdog
 npm install
 cp .env.example .env
-# vyplň DATABASE_URL, NEXT_PUBLIC_CLERK_*, CLERK_SECRET_KEY, RESEND_API_KEY, CRON_SECRET
-npm run db:push          # vytvoří tabulky v DB
+# fill in DATABASE_URL, NEXT_PUBLIC_CLERK_*, CLERK_SECRET_KEY, RESEND_API_KEY, CRON_SECRET
+npm run db:push          # creates tables in your DB
 npm run dev
 ```
 
-Otevři <http://localhost:3000>, zaregistruj se přes Clerk, vytvoř první hlídání.
+Open <http://localhost:3000>, sign up via Clerk, and create your first watch.
 
-Ruční trigger checku:
+Trigger a check manually:
 
 ```bash
 curl -X POST http://localhost:3000/api/cron/check \
   -H "Authorization: Bearer $CRON_SECRET"
 ```
 
-## Deploy na Vercel
+## Deploy to Vercel
 
-1. Forkni repo a propoj s Vercelem (nebo klikni na "Deploy on Vercel" badge výše).
-2. Vercel Marketplace → přidej **Neon Postgres**, **Clerk**, **Resend** (env proměnné se napojí automaticky).
-3. Doplň `CRON_SECRET` (`openssl rand -hex 32`) a `APP_URL` (např. `https://watchdog.vercel.app`).
-4. Po prvním deployi: `vercel env pull && npm run db:push`.
-5. GitHub repo → Settings → Secrets and variables → Actions → přidej `APP_URL` a `CRON_SECRET`. Workflow `.github/workflows/cron.yml` pak každou hodinu volá `/api/cron/check`.
+1. Fork this repo and connect it to Vercel (or click "Deploy on Vercel" above).
+2. Vercel Marketplace → add **Neon Postgres**, **Clerk**, **Resend** (env vars are wired automatically).
+3. Add `CRON_SECRET` (`openssl rand -hex 32`) and `APP_URL` (e.g. `https://watchdog.vercel.app`).
+4. After the first deploy: `vercel env pull && npm run db:push`.
+5. GitHub repo → Settings → Secrets and variables → Actions → add `APP_URL` and `CRON_SECRET`. The `.github/workflows/cron.yml` workflow will then hit `/api/cron/check` every hour.
 
-## Jak funguje picker
+## How the picker works
 
-- `/watches/new` → zadáš URL → server stáhne HTML, sanitizuje (žádné `<script>`, `<form>`, `on*` atributy, žádný `<iframe>`), injectne `<base href>` a `/picker.js`.
-- HTML jde do `<iframe srcdoc>` se `sandbox="allow-scripts"` (bez `allow-same-origin` = izolovaný od session, žádný přístup k cookies).
-- V iframe `picker.js` na hover obtáhne element červeně, na klik spočítá unikátní CSS selector a pošle ho přes `postMessage` rodičovi.
+- `/watches/new` → paste a URL → the server fetches HTML, sanitizes it (no `<script>`, `<form>`, `on*` attributes, no `<iframe>`), injects `<base href>` and `/picker.js`.
+- HTML is rendered into `<iframe srcdoc>` with `sandbox="allow-scripts"` (no `allow-same-origin` = isolated from your session, no cookie access).
+- Inside the iframe `picker.js` outlines elements red on hover; on click it computes a unique CSS selector and sends it to the parent via `postMessage`.
 
-Limitace: SPA stránky (React/Vue rendered klientem) v iframe neoživí — picker funguje na server-rendered HTML. Pro pokročilé případy lze selector vyplnit ručně.
+Limitation: client-rendered SPAs (React/Vue) don't hydrate inside the sandboxed iframe — the picker works on server-rendered HTML. For advanced cases you can type the selector manually.
 
 ## Cron flow
 
-1. GitHub Actions (každou hodinu) → `POST /api/cron/check` s bearer tokenem.
-2. Endpoint načte všechny aktivní watches, paralelně (limit 5) udělá `fetch` + cheerio extrakci podle CSS selectoru.
-3. Spočítá SHA-256 hash. Když se liší od `lastHash`, vytvoří `Change` row a pošle email přes Resend.
+1. GitHub Actions (hourly) → `POST /api/cron/check` with a bearer token.
+2. The endpoint loads all active watches and fetches them in parallel (concurrency 5) using cheerio to extract the selected element.
+3. It hashes the extracted text (SHA-256). If the hash differs from `lastHash`, it creates a `Change` row and sends an email via Resend.
 
-## Bezpečnost
+## Security
 
-- `/api/preview` a `/api/watches` (POST) chrání rate limit per uživatel.
-- URL fetcher (`/api/preview`, vytváření watches) blokuje privátní IP rozsahy a localhost — DNS lookup proběhne před fetchem (ochrana proti DNS rebindingu).
-- Iframe picker běží v `sandbox="allow-scripts"` — žádný přístup k user session.
-- `CRON_SECRET` se ověřuje timing-safe porovnáním. Bez nastaveného secretu endpoint vrací 503.
-- Per-user limit počtu hlídání (`MAX_WATCHES_PER_USER`, default 50).
+- `/api/preview` and `POST /api/watches` are rate-limited per user.
+- The URL fetcher (`/api/preview`, watch creation) blocks private IP ranges and localhost — a DNS lookup runs before the fetch to defeat DNS rebinding.
+- The iframe picker runs with `sandbox="allow-scripts"` — no access to user session.
+- `CRON_SECRET` is compared timing-safely. Without it set, the endpoint returns 503.
+- Per-user watch count cap (`MAX_WATCHES_PER_USER`, default 50).
 
-Reportuj bezpečnostní problémy podle [SECURITY.md](SECURITY.md).
+Report security issues as described in [SECURITY.md](SECURITY.md).
 
 ## Contributing
 
-PRs vítané. CI běží na každém pushi (typecheck + build). Žádné testy zatím nejsou — pokud něco přidáš, super.
+PRs welcome. CI runs on every push (typecheck + build). There are no tests yet — if you add some, great.
 
-Drobnější změny rovnou jako PR. Větší (refactor, nový provider, jiný DB driver) → otevři issue s návrhem.
+Smaller changes: open a PR directly. Larger (refactor, new provider, different DB driver): open an issue first to discuss the approach.
 
 ## License
 
-[MIT](LICENSE) © Jakub Kašpárek a contributors.
+[MIT](LICENSE) © Jakub Kašpárek and contributors.
 
-Použití na vlastní riziko.
+Use at your own risk.
