@@ -18,11 +18,18 @@ export default async function WatchDetail({
   const { id } = await params;
   const watch = await db.watch.findFirst({ where: { id, userId: email } });
   if (!watch) notFound();
-  const changes = await db.change.findMany({
-    where: { watchId: id },
-    orderBy: { detectedAt: "desc" },
-    take: 50,
-  });
+  const [changes, checks] = await Promise.all([
+    db.change.findMany({
+      where: { watchId: id },
+      orderBy: { detectedAt: "desc" },
+      take: 50,
+    }),
+    db.check.findMany({
+      where: { watchId: id },
+      orderBy: { checkedAt: "desc" },
+      take: 30,
+    }),
+  ]);
 
   const dueMs = watch.lastCheckedAt
     ? watch.lastCheckedAt.getTime() + watch.intervalMinutes * 60_000
@@ -144,7 +151,59 @@ export default async function WatchDetail({
           </ul>
         )}
       </div>
+
+      <div>
+        <h2 className="text-sm font-semibold text-neutral-600 dark:text-neutral-400 uppercase tracking-wide mb-2">
+          Activity log
+        </h2>
+        {checks.length === 0 ? (
+          <div className="rounded-xl border border-dashed border-neutral-300 dark:border-neutral-700 p-6 text-center text-sm text-neutral-500">
+            No checks recorded yet.
+          </div>
+        ) : (
+          <ul className="rounded-xl border border-neutral-200 dark:border-neutral-800 divide-y divide-neutral-200 dark:divide-neutral-800 bg-white dark:bg-neutral-900 overflow-hidden">
+            {checks.map((c) => (
+              <li
+                key={c.id}
+                className="flex items-center gap-3 px-3 py-2 text-sm"
+              >
+                <StatusDot status={c.status} />
+                <span className="text-xs text-neutral-500 tabular-nums shrink-0 w-40">
+                  {new Date(c.checkedAt).toLocaleString("en-US")}
+                </span>
+                <span className="font-mono text-xs truncate flex-1 text-neutral-700 dark:text-neutral-300">
+                  {c.status === "error" ? (
+                    <span className="text-red-600">{c.error}</span>
+                  ) : (
+                    c.value
+                  )}
+                </span>
+                {c.durationMs !== null && (
+                  <span className="text-xs text-neutral-400 tabular-nums shrink-0">
+                    {c.durationMs} ms
+                  </span>
+                )}
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
     </div>
+  );
+}
+
+function StatusDot({ status }: { status: string }) {
+  const map: Record<string, { color: string; label: string }> = {
+    same: { color: "bg-neutral-400", label: "no change" },
+    changed: { color: "bg-brand", label: "changed" },
+    error: { color: "bg-red-500", label: "error" },
+  };
+  const s = map[status] ?? map.same;
+  return (
+    <span
+      className={`inline-block w-2 h-2 rounded-full shrink-0 ${s.color}`}
+      title={s.label}
+    />
   );
 }
 

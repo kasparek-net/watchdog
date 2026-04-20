@@ -23,6 +23,7 @@ model Watch {
   intervalMinutes Int     @default(60)
   createdAt     DateTime  @default(now())
   changes       Change[]
+  checks        Check[]
 
   @@index([userId])
   @@index([isActive])
@@ -37,4 +38,17 @@ model Change {
   watch      Watch    @relation(fields: [watchId], references: [id], onDelete: Cascade)
 
   @@index([watchId])
+}
+
+model Check {
+  id        String   @id @default(cuid())
+  watchId   String
+  status    String   // "same" | "changed" | "error"
+  value     String?
+  error     String?
+  durationMs Int?
+  checkedAt DateTime @default(now())
+  watch     Watch    @relation(fields: [watchId], references: [id], onDelete: Cascade)
+
+  @@index([watchId, checkedAt])
 }

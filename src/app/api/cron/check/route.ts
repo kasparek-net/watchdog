@@ -31,19 +31,32 @@ async function processWatch(watch: {
   lastValue: string | null;
   lastHash: string | null;
 }): Promise<"changed" | "same" | "error"> {
+  const t0 = Date.now();
   const result = await fetchAndExtract(watch.url, watch.selector);
+  const durationMs = Date.now() - t0;
+
   if (!result.ok) {
-    await db.watch.update({
-      where: { id: watch.id },
-      data: { lastCheckedAt: new Date(), lastError: result.error },
-    });
+    await db.$transaction([
+      db.watch.update({
+        where: { id: watch.id },
+        data: { lastCheckedAt: new Date(), lastError: result.error },
+      }),
+      db.check.create({
+        data: { watchId: watch.id, status: "error", error: result.error, durationMs },
+      }),
+    ]);
     return "error";
   }
   if (watch.lastHash === result.hash) {
-    await db.watch.update({
-      where: { id: watch.id },
-      data: { lastCheckedAt: new Date(), lastError: null },
-    });
+    await db.$transaction([
+      db.watch.update({
+        where: { id: watch.id },
+        data: { lastCheckedAt: new Date(), lastError: null },
+      }),
+      db.check.create({
+        data: { watchId: watch.id, status: "same", value: result.value, durationMs },
+      }),
+    ]);
     return "same";
   }
   if (watch.lastHash !== null && watch.lastValue !== null) {
@@ -67,15 +80,20 @@ async function processWatch(watch: {
       console.error("[cron] email send failed", e);
     }
   }
-  await db.watch.update({
-    where: { id: watch.id },
-    data: {
-      lastCheckedAt: new Date(),
-      lastValue: result.value,
-      lastHash: result.hash,
-      lastError: null,
-    },
-  });
+  await db.$transaction([
+    db.watch.update({
+      where: { id: watch.id },
+      data: {
+        lastCheckedAt: new Date(),
+        lastValue: result.value,
+        lastHash: result.hash,
+        lastError: null,
+      },
+    }),
+    db.check.create({
+      data: { watchId: watch.id, status: "changed", value: result.value, durationMs },
+    }),
+  ]);
   return "changed";
 }
 
