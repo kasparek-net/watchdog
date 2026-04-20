@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@clerk/nextjs/server";
+import { getSessionEmail } from "@/lib/session";
 import { z } from "zod";
 import { db } from "@/lib/db";
 import { fetchAndExtract, assertPublicHost } from "@/lib/extract";
@@ -18,7 +18,7 @@ const CreateSchema = z.object({
 });
 
 export async function GET() {
-  const { userId } = await auth();
+  const userId = await getSessionEmail();
   if (!userId) return new NextResponse("Unauthorized", { status: 401 });
   const watches = await db.watch.findMany({
     where: { userId },
@@ -29,7 +29,7 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
-  const { userId } = await auth();
+  const userId = await getSessionEmail();
   if (!userId) return new NextResponse("Unauthorized", { status: 401 });
 
   const rl = rateLimit("watches:create", userId, 10, 60_000);

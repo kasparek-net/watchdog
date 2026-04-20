@@ -5,6 +5,26 @@ const from = process.env.RESEND_FROM ?? "Pagedog <onboarding@resend.dev>";
 
 const resend = apiKey ? new Resend(apiKey) : null;
 
+export async function sendMagicLink(input: { to: string; url: string }) {
+  if (!resend) {
+    console.warn("[email] RESEND_API_KEY not set, magic link:", input.url);
+    return;
+  }
+  const subject = "Sign in to Pagedog";
+  const html = `<!doctype html>
+<html><body style="font-family:-apple-system,Segoe UI,Helvetica,Arial,sans-serif;color:#0a0a0a;max-width:560px;margin:0 auto;padding:24px">
+  <h2 style="margin:0 0 8px">Sign in to Pagedog</h2>
+  <p style="margin:0 0 16px;color:#525252">Click the button below to sign in. This link expires in 15 minutes.</p>
+  <p style="margin:24px 0">
+    <a href="${escape(input.url)}" style="display:inline-block;background:#0a0a0a;color:#fff;padding:10px 18px;border-radius:8px;text-decoration:none">Sign in</a>
+  </p>
+  <p style="margin:0;color:#737373;font-size:12px">Or paste this URL: ${escape(input.url)}</p>
+  <p style="margin:24px 0 0;color:#a3a3a3;font-size:12px">If you didn&apos;t request this, you can ignore the email.</p>
+</body></html>`;
+  const text = `Sign in to Pagedog\n\n${input.url}\n\nLink expires in 15 minutes.`;
+  await resend.emails.send({ from, to: input.to, subject, html, text });
+}
+
 export async function sendChangeNotification(input: {
   to: string;
   label: string;

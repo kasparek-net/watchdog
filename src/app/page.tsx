@@ -1,13 +1,13 @@
 import Link from "next/link";
-import { auth, currentUser } from "@clerk/nextjs/server";
 import { db } from "@/lib/db";
+import { getSessionEmail } from "@/lib/session";
 import { WatchRow } from "@/components/watch-row";
 
 export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
-  const { userId } = await auth();
-  if (!userId) {
+  const email = await getSessionEmail();
+  if (!email) {
     return (
       <div className="text-center py-16">
         <h1 className="text-3xl font-semibold tracking-tight">Pagedog</h1>
@@ -24,9 +24,8 @@ export default async function HomePage() {
     );
   }
 
-  const user = await currentUser();
   const watches = await db.watch.findMany({
-    where: { userId },
+    where: { userId: email },
     orderBy: { createdAt: "desc" },
     include: { _count: { select: { changes: true } } },
   });
@@ -35,9 +34,7 @@ export default async function HomePage() {
     <div>
       <div className="flex items-baseline justify-between mb-6">
         <h1 className="text-2xl font-semibold tracking-tight">Watches</h1>
-        <span className="text-sm text-neutral-500">
-          {user?.firstName ?? "Hi"}
-        </span>
+        <span className="text-sm text-neutral-500 truncate max-w-[200px]">{email}</span>
       </div>
       {watches.length === 0 ? (
         <div className="rounded-xl border border-dashed border-neutral-300 dark:border-neutral-700 p-10 text-center">

@@ -1,15 +1,26 @@
-import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
+import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
+import { SESSION_COOKIE, verifySessionValue } from "@/lib/session";
 
-const isPublic = createRouteMatcher([
-  "/sign-in(.*)",
-  "/sign-up(.*)",
-  "/api/cron/(.*)",
-]);
+const PUBLIC_PREFIXES = ["/sign-in", "/api/auth/", "/api/cron/"];
 
-export default clerkMiddleware(async (auth, req) => {
-  if (isPublic(req)) return;
-  await auth.protect();
-});
+export default function proxy(req: NextRequest) {
+  const path = req.nextUrl.pathname;
+  if (PUBLIC_PREFIXES.some((p) => path === p || path.startsWith(p))) {
+    return NextResponse.next();
+  }
+  const cookie = req.cookies.get(SESSION_COOKIE)?.value;
+  if (!verifySessionValue(cookie)) {
+    if (path.startsWith("/api/")) {
+      return new NextResponse("Unauthorized", { status: 401 });
+    }
+    const url = req.nextUrl.clone();
+    url.pathname = "/sign-in";
+    url.search = "";
+    return NextResponse.redirect(url);
+  }
+  return NextResponse.next();
+}
 
 export const config = {
   matcher: [

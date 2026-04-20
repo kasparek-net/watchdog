@@ -1,9 +1,8 @@
-import { currentUser } from "@clerk/nextjs/server";
+import { getSessionEmail } from "@/lib/session";
 import NewWatchForm from "./form";
 
 export default async function NewWatchPage() {
-  const user = await currentUser();
-  const defaultEmail = user?.primaryEmailAddress?.emailAddress ?? "";
+  const defaultEmail = (await getSessionEmail()) ?? "";
   return (
     <div className="max-w-3xl mx-auto">
       <h1 className="text-2xl font-semibold tracking-tight mb-1">New watch</h1>

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import * as cheerio from "cheerio";
-import { auth } from "@clerk/nextjs/server";
+import { getSessionEmail } from "@/lib/session";
 import { fetchHtml, extractFromHtml, assertPublicHost } from "@/lib/extract";
 import { rateLimit } from "@/lib/rate-limit";
 import { PICKER_JS } from "@/lib/picker-source";
@@ -9,10 +9,10 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function GET(req: NextRequest) {
-  const { userId } = await auth();
-  if (!userId) return new NextResponse("Unauthorized", { status: 401 });
+  const email = await getSessionEmail();
+  if (!email) return new NextResponse("Unauthorized", { status: 401 });
 
-  const rl = rateLimit("preview", userId, 30, 60_000);
+  const rl = rateLimit("preview", email, 30, 60_000);
   if (!rl.ok) {
     return NextResponse.json(
       { error: "Too many requests. Try again in a moment." },

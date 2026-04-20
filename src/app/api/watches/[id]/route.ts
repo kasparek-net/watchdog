@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@clerk/nextjs/server";
+import { getSessionEmail } from "@/lib/session";
 import { z } from "zod";
 import { db } from "@/lib/db";
 
@@ -21,7 +21,7 @@ export async function GET(
   _req: NextRequest,
   ctx: { params: Promise<{ id: string }> },
 ) {
-  const { userId } = await auth();
+  const userId = await getSessionEmail();
   if (!userId) return new NextResponse("Unauthorized", { status: 401 });
   const { id } = await ctx.params;
   const watch = await getOwned(id, userId);
@@ -38,7 +38,7 @@ export async function PATCH(
   req: NextRequest,
   ctx: { params: Promise<{ id: string }> },
 ) {
-  const { userId } = await auth();
+  const userId = await getSessionEmail();
   if (!userId) return new NextResponse("Unauthorized", { status: 401 });
   const { id } = await ctx.params;
   const watch = await getOwned(id, userId);
@@ -57,7 +57,7 @@ export async function DELETE(
   _req: NextRequest,
   ctx: { params: Promise<{ id: string }> },
 ) {
-  const { userId } = await auth();
+  const userId = await getSessionEmail();
   if (!userId) return new NextResponse("Unauthorized", { status: 401 });
   const { id } = await ctx.params;
   const watch = await getOwned(id, userId);

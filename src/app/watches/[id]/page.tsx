@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { auth } from "@clerk/nextjs/server";
 import { db } from "@/lib/db";
+import { getSessionEmail } from "@/lib/session";
 import { intervalLabel, shortenUrl } from "@/lib/format";
 import { Countdown } from "@/components/countdown";
 import WatchControls from "./controls";
@@ -13,10 +13,10 @@ export default async function WatchDetail({
 }: {
   params: Promise<{ id: string }>;
 }) {
-  const { userId } = await auth();
-  if (!userId) notFound();
+  const email = await getSessionEmail();
+  if (!email) notFound();
   const { id } = await params;
-  const watch = await db.watch.findFirst({ where: { id, userId } });
+  const watch = await db.watch.findFirst({ where: { id, userId: email } });
   if (!watch) notFound();
   const changes = await db.change.findMany({
     where: { watchId: id },
