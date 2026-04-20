@@ -1,8 +1,8 @@
 import { cookies } from "next/headers";
+import { THEME_COOKIE, type Theme } from "./theme-shared";
 
-export type Theme = "light" | "dark" | "system";
-
-export const THEME_COOKIE = "pd_theme";
+export { THEME_COOKIE };
+export type { Theme };
 
 export async function getTheme(): Promise<Theme> {
   const c = await cookies();

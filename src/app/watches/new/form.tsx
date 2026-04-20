@@ -2,7 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { INTERVAL_OPTIONS } from "@/lib/format";
+import { Field } from "@/components/field";
+import { IntervalGroup } from "@/components/interval-group";
 
 type TestState =
   | { status: "idle" }
@@ -57,7 +58,9 @@ export default function NewWatchForm({ defaultEmail }: { defaultEmail: string })
       }
     }, 500);
     return () => clearTimeout(handle);
-  }, [selector, url, previewHtml, pickedText, test]);
+    // `test` intentionally excluded — it's mutated inside; including would loop on error transitions.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selector, url, previewHtml, pickedText]);
 
   async function loadPreview(e: React.FormEvent) {
     e.preventDefault();
@@ -261,31 +264,6 @@ function Section({
   );
 }
 
-function IntervalGroup({ value, onChange }: { value: number; onChange: (v: number) => void }) {
-  return (
-    <div className="inline-flex flex-wrap gap-1 rounded-lg border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 p-1">
-      {INTERVAL_OPTIONS.map((o) => {
-        const active = o.value === value;
-        return (
-          <button
-            type="button"
-            key={o.value}
-            onClick={() => onChange(o.value)}
-            className={
-              "px-3 py-1.5 text-xs rounded-md transition " +
-              (active
-                ? "bg-brand text-black font-medium"
-                : "text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800")
-            }
-          >
-            {o.label}
-          </button>
-        );
-      })}
-    </div>
-  );
-}
-
 function TestBadge({ state }: { state: TestState }) {
   if (state.status === "loading")
     return (
@@ -308,13 +286,3 @@ function TestBadge({ state }: { state: TestState }) {
   return null;
 }
 
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <label className="block">
-      <span className="block text-xs font-medium text-neutral-600 dark:text-neutral-400 mb-1.5">
-        {label}
-      </span>
-      {children}
-    </label>
-  );
-}

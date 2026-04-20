@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { INTERVAL_OPTIONS } from "@/lib/format";
+import { Field } from "@/components/field";
+import { IntervalGroup } from "@/components/interval-group";
 
 export default function WatchControls({
   id,
@@ -73,30 +74,14 @@ export default function WatchControls({
         </Field>
       </div>
       <Field label="Check every">
-        <div className="inline-flex flex-wrap gap-1 rounded-lg border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 p-1">
-          {INTERVAL_OPTIONS.map((o) => {
-            const active = o.value === interval;
-            return (
-              <button
-                type="button"
-                key={o.value}
-                disabled={busy}
-                onClick={() => {
-                  setIntervalValue(o.value);
-                  patch({ intervalMinutes: o.value });
-                }}
-                className={
-                  "px-3 py-1.5 text-xs rounded-md transition disabled:opacity-50 " +
-                  (active
-                    ? "bg-brand text-black font-medium"
-                    : "text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800")
-                }
-              >
-                {o.label}
-              </button>
-            );
-          })}
-        </div>
+        <IntervalGroup
+          value={interval}
+          disabled={busy}
+          onChange={(v) => {
+            setIntervalValue(v);
+            patch({ intervalMinutes: v });
+          }}
+        />
       </Field>
       <div className="flex flex-wrap gap-2 pt-2 border-t border-neutral-200 dark:border-neutral-800">
         <button
@@ -118,13 +103,3 @@ export default function WatchControls({
   );
 }
 
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <label className="block">
-      <span className="block text-xs font-medium text-neutral-600 dark:text-neutral-400 mb-1.5">
-        {label}
-      </span>
-      {children}
-    </label>
-  );
-}

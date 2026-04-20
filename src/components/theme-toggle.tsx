@@ -1,10 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-
-const COOKIE = "pd_theme";
-
-type Theme = "light" | "dark" | "system";
+import { THEME_COOKIE, type Theme } from "@/lib/theme-shared";
 
 function applyTheme(t: Theme) {
   const root = document.documentElement;
@@ -12,30 +9,21 @@ function applyTheme(t: Theme) {
   root.classList.toggle("dark", dark);
 }
 
-function readCookie(): Theme {
-  const m = document.cookie.match(/pd_theme=(light|dark|system)/);
-  return (m?.[1] as Theme) ?? "system";
-}
-
 function writeCookie(t: Theme) {
   const exp = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toUTCString();
-  document.cookie = `${COOKIE}=${t}; path=/; expires=${exp}; SameSite=Lax`;
+  document.cookie = `${THEME_COOKIE}=${t}; path=/; expires=${exp}; SameSite=Lax`;
 }
 
-export function ThemeToggle() {
-  const [theme, setTheme] = useState<Theme>("system");
+export function ThemeToggle({ initialTheme }: { initialTheme: Theme }) {
+  const [theme, setTheme] = useState<Theme>(initialTheme);
 
   useEffect(() => {
-    const initial = readCookie();
-    setTheme(initial);
-    applyTheme(initial);
+    if (theme !== "system") return;
     const mq = window.matchMedia("(prefers-color-scheme: dark)");
-    const onChange = () => {
-      if (readCookie() === "system") applyTheme("system");
-    };
+    const onChange = () => applyTheme("system");
     mq.addEventListener("change", onChange);
     return () => mq.removeEventListener("change", onChange);
-  }, []);
+  }, [theme]);
 
   function cycle() {
     const next: Theme = theme === "light" ? "dark" : theme === "dark" ? "system" : "light";

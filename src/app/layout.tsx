@@ -20,8 +20,7 @@ const NO_FLASH_SCRIPT =
 export default async function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
-  const email = await getSessionEmail();
-  const theme = await getTheme();
+  const [email, theme] = await Promise.all([getSessionEmail(), getTheme()]);
   const initialDark = theme === "dark";
   return (
     <html lang="en" className={`h-full antialiased${initialDark ? " dark" : ""}`}>
@@ -37,7 +36,7 @@ export default async function RootLayout({
               Pagedog
             </Link>
             <nav className="flex items-center gap-3 text-sm">
-              <ThemeToggle />
+              <ThemeToggle initialTheme={theme} />
               {email ? (
                 <>
                   <Link
