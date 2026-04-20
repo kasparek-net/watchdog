@@ -16,7 +16,7 @@ export async function sendMagicLink(input: { to: string; url: string }) {
   <h2 style="margin:0 0 8px">Sign in to Pagedog</h2>
   <p style="margin:0 0 16px;color:#525252">Click the button below to sign in. This link expires in 15 minutes.</p>
   <p style="margin:24px 0">
-    <a href="${escape(input.url)}" style="display:inline-block;background:#0a0a0a;color:#fff;padding:10px 18px;border-radius:8px;text-decoration:none">Sign in</a>
+    <a href="${escape(input.url)}" style="display:inline-block;background:#eabf43;color:#0a0a0a;padding:10px 18px;border-radius:8px;text-decoration:none;font-weight:500">Sign in</a>
   </p>
   <p style="margin:0;color:#737373;font-size:12px">Or paste this URL: ${escape(input.url)}</p>
   <p style="margin:24px 0 0;color:#a3a3a3;font-size:12px">If you didn&apos;t request this, you can ignore the email.</p>
@@ -48,8 +48,8 @@ export async function sendChangeNotification(input: {
     <tr><td style="padding:8px;background:#fafafa;border:1px solid #e5e5e5;width:80px;font-size:12px;color:#737373">Was</td><td style="padding:8px;border:1px solid #e5e5e5">${escape(input.oldValue)}</td></tr>
     <tr><td style="padding:8px;background:#fafafa;border:1px solid #e5e5e5;font-size:12px;color:#737373">Now</td><td style="padding:8px;border:1px solid #e5e5e5"><strong>${escape(input.newValue)}</strong></td></tr>
   </table>
-  <p style="margin:24px 0 8px"><a href="${escape(input.url)}" style="color:#2563eb">Open page</a></p>
-  <p style="margin:0"><a href="${escape(appUrl)}/watches/${input.watchId}" style="color:#737373;font-size:12px">View in Pagedog →</a></p>
+  <p style="margin:24px 0 8px"><a href="${escape(input.url)}" style="display:inline-block;background:#eabf43;color:#0a0a0a;padding:8px 14px;border-radius:6px;text-decoration:none;font-weight:500">Open page</a></p>
+  <p style="margin:16px 0 0"><a href="${escape(appUrl)}/watches/${input.watchId}" style="color:#737373;font-size:12px">View in Pagedog →</a></p>
 </body></html>`;
   const text = `Change detected: ${input.label}\n\nWas: ${input.oldValue}\nNow: ${input.newValue}\n\nPage: ${input.url}\nDetails: ${appUrl}/watches/${input.watchId}\n`;
   await resend.emails.send({

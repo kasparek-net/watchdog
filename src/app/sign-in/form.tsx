@@ -34,7 +34,7 @@ export default function SignInForm() {
 
   if (state.status === "sent") {
     return (
-      <div className="rounded-xl border border-emerald-200 dark:border-emerald-900 bg-emerald-50 dark:bg-emerald-950 p-4 text-sm">
+      <div className="rounded-xl border-2 border-brand bg-brand/10 p-4 text-sm">
         Check your inbox at <strong>{email}</strong> — we sent a sign-in link.
         It expires in 15 minutes.
       </div>
@@ -55,7 +55,7 @@ export default function SignInForm() {
       <button
         type="submit"
         disabled={state.status === "sending" || !email}
-        className="w-full rounded-md bg-neutral-900 dark:bg-neutral-100 dark:text-neutral-900 text-white px-4 py-2 text-sm font-medium hover:opacity-90 disabled:opacity-50"
+        className="w-full rounded-md bg-brand text-black px-4 py-2 text-sm font-medium hover:bg-brand-dark disabled:opacity-50"
       >
         {state.status === "sending" ? "Sending…" : "Email me a link"}
       </button>

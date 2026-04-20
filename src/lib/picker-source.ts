@@ -17,7 +17,7 @@ export const PICKER_JS = String.raw`(function () {
 
   var css = [
     "." + HOVER + "{outline:2px solid #ef4444!important;outline-offset:1px;cursor:crosshair!important;background:rgba(239,68,68,0.06)!important}",
-    "." + PICKED + "{outline:3px solid #10b981!important;outline-offset:2px}",
+    "." + PICKED + "{outline:3px solid #eabf43!important;outline-offset:2px}",
     "html:not(.__wd_paused__),html:not(.__wd_paused__) body{cursor:crosshair!important}",
     "html:not(.__wd_paused__) a,html:not(.__wd_paused__) button{pointer-events:none!important}",
     "html.__wd_banhide__ [class*='cookie' i],html.__wd_banhide__ [class*='consent' i],html.__wd_banhide__ [class*='gdpr' i],html.__wd_banhide__ [class*='banner' i],html.__wd_banhide__ [id*='cookie' i],html.__wd_banhide__ [id*='consent' i],html.__wd_banhide__ [id*='banner' i]{display:none!important}",
@@ -28,12 +28,12 @@ export const PICKER_JS = String.raw`(function () {
     "#__wd_bar__{bottom:16px;background:#0a0a0a;padding:10px 12px;border-radius:12px;box-shadow:0 10px 40px rgba(0,0,0,0.45);display:flex;gap:8px;align-items:center;flex-wrap:wrap;max-width:calc(100vw - 24px);font-size:13px}",
     "#__wd_bar__ .__wd_text{max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;opacity:0.9;font-family:ui-monospace,monospace;font-size:12px}",
     "#__wd_bar__ .__wd_count{font-size:11px;padding:2px 6px;border-radius:4px;background:rgba(255,255,255,0.15)}",
-    "#__wd_bar__ .__wd_count.warn{background:rgba(245,158,11,0.25);color:#fbbf24}",
+    "#__wd_bar__ .__wd_count.warn{background:rgba(234,191,67,0.3);color:#eabf43}",
     "#__wd_bar__ button{background:rgba(255,255,255,0.1);border:0;border-radius:6px;padding:6px 10px;font-size:12px;font-weight:500;cursor:pointer!important;color:#fff}",
     "#__wd_bar__ button:hover:not(:disabled){background:rgba(255,255,255,0.2)}",
     "#__wd_bar__ button:disabled{opacity:0.35;cursor:not-allowed!important}",
-    "#__wd_bar__ .__wd_use{background:#10b981}",
-    "#__wd_bar__ .__wd_use:hover:not(:disabled){background:#059669}"
+    "#__wd_bar__ .__wd_use{background:#eabf43;color:#0a0a0a}",
+    "#__wd_bar__ .__wd_use:hover:not(:disabled){background:#d4a92e}"
   ].join("");
   var styleEl = document.createElement("style");
   styleEl.textContent = css;

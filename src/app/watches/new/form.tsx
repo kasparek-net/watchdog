@@ -128,7 +128,7 @@ export default function NewWatchForm({ defaultEmail }: { defaultEmail: string })
         <button
           type="submit"
           disabled={loadingPreview || !url}
-          className="shrink-0 rounded-md bg-neutral-900 dark:bg-neutral-100 dark:text-neutral-900 text-white px-4 py-2 text-sm hover:opacity-90 disabled:opacity-50"
+          className="shrink-0 rounded-md bg-neutral-900 dark:bg-neutral-100 dark:text-neutral-900 text-white px-4 py-2 text-sm font-medium hover:opacity-90 disabled:opacity-50"
         >
           {loadingPreview ? "Loading…" : previewHtml ? "Reload" : "Load"}
         </button>
@@ -223,7 +223,7 @@ export default function NewWatchForm({ defaultEmail }: { defaultEmail: string })
               type="button"
               onClick={save}
               disabled={!canSave}
-              className="rounded-md bg-emerald-600 text-white px-5 py-2 text-sm font-medium hover:bg-emerald-700 disabled:opacity-50"
+              className="rounded-md bg-brand text-black px-5 py-2 text-sm font-medium hover:bg-brand-dark disabled:opacity-50"
             >
               {submitting ? "Saving…" : "Save watch"}
             </button>
@@ -244,7 +244,7 @@ function TestBadge({ state }: { state: TestState }) {
     );
   if (state.status === "ok")
     return (
-      <span className="text-xs px-2 py-1 rounded bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400 shrink-0">
+      <span className="text-xs px-2 py-1 rounded bg-brand text-black shrink-0">
         ✓ Match
       </span>
     );

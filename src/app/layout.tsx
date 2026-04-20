@@ -25,7 +25,7 @@ export default async function RootLayout({
                 <>
                   <Link
                     href="/watches/new"
-                    className="rounded-md bg-neutral-900 dark:bg-neutral-100 dark:text-neutral-900 text-white px-3 py-1.5 hover:opacity-90"
+                    className="rounded-md bg-brand text-black px-3 py-1.5 font-medium hover:bg-brand-dark"
                   >
                     New watch
                   </Link>

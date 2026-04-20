@@ -16,7 +16,7 @@ export default async function HomePage() {
         </p>
         <Link
           href="/sign-in"
-          className="inline-block mt-6 rounded-md bg-neutral-900 dark:bg-neutral-100 dark:text-neutral-900 text-white px-4 py-2 text-sm hover:opacity-90"
+          className="inline-block mt-6 rounded-md bg-brand text-black px-4 py-2 text-sm font-medium hover:bg-brand-dark"
         >
           Get started →
         </Link>
@@ -43,7 +43,7 @@ export default async function HomePage() {
           </p>
           <Link
             href="/watches/new"
-            className="inline-block mt-4 rounded-md bg-neutral-900 dark:bg-neutral-100 dark:text-neutral-900 text-white px-4 py-2 text-sm hover:opacity-90"
+            className="inline-block mt-4 rounded-md bg-brand text-black px-4 py-2 text-sm font-medium hover:bg-brand-dark"
           >
             Create your first →
           </Link>
