@@ -8,13 +8,18 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 export const maxDuration = 300;
 
-function authorized(req: NextRequest): boolean {
+function checkAuth(req: NextRequest): { ok: true } | { ok: false; status: number; msg: string } {
   const secret = process.env.CRON_SECRET;
-  if (!secret) return false;
+  if (!secret) {
+    return { ok: false, status: 503, msg: "CRON_SECRET not configured" };
+  }
   const header = req.headers.get("authorization") ?? "";
   const expected = `Bearer ${secret}`;
-  if (header.length !== expected.length) return false;
-  return timingSafeEqual(Buffer.from(header), Buffer.from(expected));
+  if (header.length !== expected.length) return { ok: false, status: 401, msg: "Unauthorized" };
+  if (!timingSafeEqual(Buffer.from(header), Buffer.from(expected))) {
+    return { ok: false, status: 401, msg: "Unauthorized" };
+  }
+  return { ok: true };
 }
 
 async function processWatch(watch: {
@@ -93,13 +98,8 @@ async function runChecks() {
 }
 
 export async function POST(req: NextRequest) {
-  if (!authorized(req)) {
-    return new NextResponse("Unauthorized", { status: 401 });
-  }
+  const auth = checkAuth(req);
+  if (!auth.ok) return new NextResponse(auth.msg, { status: auth.status });
   const summary = await runChecks();
   return NextResponse.json(summary);
-}
-
-export async function GET(req: NextRequest) {
-  return POST(req);
 }

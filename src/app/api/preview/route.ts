@@ -1,31 +1,26 @@
 import { NextRequest, NextResponse } from "next/server";
 import * as cheerio from "cheerio";
 import { auth } from "@clerk/nextjs/server";
-import { fetchHtml, extractFromHtml } from "@/lib/extract";
+import { fetchHtml, extractFromHtml, assertPublicHost } from "@/lib/extract";
+import { rateLimit } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const PRIVATE_HOSTS = [
-  /^localhost$/i,
-  /^127\./,
-  /^10\./,
-  /^192\.168\./,
-  /^172\.(1[6-9]|2\d|3[01])\./,
-  /^169\.254\./,
-  /^::1$/,
-  /^fc00:/i,
-  /^fe80:/i,
-];
-
-function isBlocked(url: URL): boolean {
-  if (url.protocol !== "http:" && url.protocol !== "https:") return true;
-  return PRIVATE_HOSTS.some((re) => re.test(url.hostname));
-}
-
 export async function GET(req: NextRequest) {
   const { userId } = await auth();
   if (!userId) return new NextResponse("Unauthorized", { status: 401 });
+
+  const rl = rateLimit("preview", userId, 30, 60_000);
+  if (!rl.ok) {
+    return NextResponse.json(
+      { error: "Příliš mnoho požadavků, zkus to za chvíli." },
+      {
+        status: 429,
+        headers: { "Retry-After": Math.ceil(rl.resetMs / 1000).toString() },
+      },
+    );
+  }
 
   const raw = req.nextUrl.searchParams.get("url");
   if (!raw) return NextResponse.json({ error: "Missing url" }, { status: 400 });
@@ -36,8 +31,16 @@ export async function GET(req: NextRequest) {
   } catch {
     return NextResponse.json({ error: "Invalid URL" }, { status: 400 });
   }
-  if (isBlocked(url)) {
-    return NextResponse.json({ error: "URL is not allowed" }, { status: 400 });
+  if (url.protocol !== "http:" && url.protocol !== "https:") {
+    return NextResponse.json({ error: "Pouze http(s) URL" }, { status: 400 });
+  }
+  try {
+    await assertPublicHost(url.hostname);
+  } catch (e) {
+    return NextResponse.json(
+      { error: e instanceof Error ? e.message : "Host not allowed" },
+      { status: 400 },
+    );
   }
 
   const mode = req.nextUrl.searchParams.get("mode");

@@ -2,9 +2,12 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { z } from "zod";
 import { db } from "@/lib/db";
-import { fetchAndExtract } from "@/lib/extract";
+import { fetchAndExtract, assertPublicHost } from "@/lib/extract";
+import { rateLimit } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
+
+const MAX_WATCHES_PER_USER = Number(process.env.MAX_WATCHES_PER_USER ?? 50);
 
 const CreateSchema = z.object({
   label: z.string().min(1).max(100),
@@ -28,12 +31,46 @@ export async function POST(req: NextRequest) {
   const { userId } = await auth();
   if (!userId) return new NextResponse("Unauthorized", { status: 401 });
 
+  const rl = rateLimit("watches:create", userId, 10, 60_000);
+  if (!rl.ok) {
+    return NextResponse.json(
+      { error: "Příliš mnoho požadavků, zkus to za chvíli." },
+      { status: 429, headers: { "Retry-After": Math.ceil(rl.resetMs / 1000).toString() } },
+    );
+  }
+
+  const count = await db.watch.count({ where: { userId } });
+  if (count >= MAX_WATCHES_PER_USER) {
+    return NextResponse.json(
+      { error: `Limit ${MAX_WATCHES_PER_USER} hlídání na uživatele dosažen.` },
+      { status: 429 },
+    );
+  }
+
   const body = await req.json().catch(() => null);
   const parsed = CreateSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
   }
   const { label, url, selector, notifyEmail } = parsed.data;
+
+  let parsedUrl: URL;
+  try {
+    parsedUrl = new URL(url);
+  } catch {
+    return NextResponse.json({ error: "Invalid URL" }, { status: 400 });
+  }
+  if (parsedUrl.protocol !== "http:" && parsedUrl.protocol !== "https:") {
+    return NextResponse.json({ error: "Pouze http(s) URL" }, { status: 400 });
+  }
+  try {
+    await assertPublicHost(parsedUrl.hostname);
+  } catch (e) {
+    return NextResponse.json(
+      { error: e instanceof Error ? e.message : "Host not allowed" },
+      { status: 400 },
+    );
+  }
 
   const initial = await fetchAndExtract(url, selector);
 
