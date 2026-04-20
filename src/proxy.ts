@@ -8,7 +8,15 @@ import {
   parseSessionValue,
 } from "@/lib/session";
 
-const PUBLIC_PREFIXES = ["/sign-in", "/api/auth/", "/api/cron/"];
+const PUBLIC_PREFIXES = [
+  "/sign-in",
+  "/api/auth/",
+  "/api/cron/",
+  "/icon",
+  "/apple-icon",
+  "/opengraph-image",
+  "/twitter-image",
+];
 
 export default function proxy(req: NextRequest) {
   const path = req.nextUrl.pathname;

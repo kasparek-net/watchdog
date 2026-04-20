@@ -11,8 +11,8 @@ export const metadata: Metadata = {
   title: "Pagedog",
   description: "Watches web pages for changes and emails you when they happen.",
   icons: {
-    icon: [{ url: "/icon", type: "image/svg+xml" }],
-    apple: [{ url: "/icon", type: "image/svg+xml" }],
+    icon: [{ url: "/icon.svg", type: "image/svg+xml" }],
+    apple: [{ url: "/icon.svg", type: "image/svg+xml" }],
   },
 };
 
