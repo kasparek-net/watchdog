@@ -193,7 +193,7 @@ function SegmentedButton({
       className={
         "inline-flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-md transition " +
         (active
-          ? "bg-brand text-black font-medium"
+          ? "bg-accent text-black font-medium"
           : "text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800")
       }
     >
