@@ -10,10 +10,6 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "Pagedog",
   description: "Watches web pages for changes and emails you when they happen.",
-  icons: {
-    icon: [{ url: "/icon.svg", type: "image/svg+xml" }],
-    apple: [{ url: "/icon.svg", type: "image/svg+xml" }],
-  },
 };
 
 const NO_FLASH_SCRIPT =
