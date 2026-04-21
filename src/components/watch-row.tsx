@@ -123,24 +123,27 @@ export function WatchRow({ watch }: { watch: Watch }) {
   );
 }
 
-type Heat = "fresh" | "warm" | "hot" | "due";
+type Heat = "cold" | "fresh" | "warm" | "hot" | "due";
 
 function bucketForProgress(p: number): Heat {
   if (p >= 1) return "due";
-  if (p >= 0.85) return "hot";
-  if (p >= 0.6) return "warm";
-  return "fresh";
+  if (p >= 0.75) return "hot";
+  if (p >= 0.5) return "warm";
+  if (p >= 0.25) return "fresh";
+  return "cold";
 }
 
 const HEAT_CLASSES: Record<Heat, string> = {
+  cold:
+    "border-sky-200 dark:border-sky-900/60 bg-sky-50 dark:bg-sky-950/30",
   fresh:
     "border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900",
   warm:
-    "border-amber-200 dark:border-amber-900/60 bg-amber-50 dark:bg-amber-950/30",
+    "border-amber-300 dark:border-amber-800/70 bg-amber-100 dark:bg-amber-950/50",
   hot:
-    "border-amber-300 dark:border-amber-800/80 bg-amber-100 dark:bg-amber-900/40",
+    "border-orange-400 dark:border-orange-700 bg-orange-200 dark:bg-orange-900/60",
   due:
-    "border-brand dark:border-brand/70 bg-brand/20 dark:bg-brand/15",
+    "border-brand dark:border-brand bg-brand/40 dark:bg-brand/25",
 };
 
 function Thumbnail({
