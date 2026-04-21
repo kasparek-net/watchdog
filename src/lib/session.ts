@@ -1,8 +1,10 @@
 import { cookies } from "next/headers";
-import { createHmac, timingSafeEqual } from "node:crypto";
+import { createHmac, randomInt, timingSafeEqual } from "node:crypto";
 
 export const SESSION_COOKIE = "pd_session";
 const MAGIC_TTL_MS = 15 * 60 * 1000;
+export const OTP_TTL_MS = 15 * 60 * 1000;
+export const OTP_MAX_ATTEMPTS = 5;
 export const SESSION_TTL_MS = 365 * 24 * 60 * 60 * 1000;
 export const SESSION_RENEW_THRESHOLD_MS = 60 * 24 * 60 * 60 * 1000;
 
@@ -79,6 +81,16 @@ export async function requireSessionEmail(): Promise<string> {
   const email = await getSessionEmail();
   if (!email) throw new Response("Unauthorized", { status: 401 });
   return email;
+}
+
+export function generateOtp(): string {
+  return randomInt(0, 1_000_000).toString().padStart(6, "0");
+}
+
+export function hashOtp(code: string, email: string): string {
+  return createHmac("sha256", secret())
+    .update(`${email.toLowerCase()}|${code}`)
+    .digest("base64url");
 }
 
 export function parseAllowedEmails(): string[] {

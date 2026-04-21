@@ -1,6 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { createMagicToken, isAllowed } from "@/lib/session";
+import { db } from "@/lib/db";
+import {
+  OTP_TTL_MS,
+  createMagicToken,
+  generateOtp,
+  hashOtp,
+  isAllowed,
+} from "@/lib/session";
 import { sendMagicLink } from "@/lib/email";
 import { rateLimit } from "@/lib/rate-limit";
 
@@ -32,8 +39,21 @@ export async function POST(req: NextRequest) {
   const token = createMagicToken(email);
   const appUrl = process.env.APP_URL ?? new URL(req.url).origin;
   const link = `${appUrl}/api/auth/verify?token=${encodeURIComponent(token)}`;
+
+  const code = generateOtp();
+  await db.$transaction([
+    db.signInCode.deleteMany({ where: { email } }),
+    db.signInCode.create({
+      data: {
+        email,
+        codeHash: hashOtp(code, email),
+        expiresAt: new Date(Date.now() + OTP_TTL_MS),
+      },
+    }),
+  ]);
+
   try {
-    await sendMagicLink({ to: email, url: link });
+    await sendMagicLink({ to: email, url: link, code, appUrl });
   } catch (e) {
     console.error("[auth:request] email failed", e);
     return NextResponse.json({ error: "Failed to send email." }, { status: 502 });

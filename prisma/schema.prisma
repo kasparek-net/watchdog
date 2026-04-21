@@ -44,6 +44,18 @@ model Change {
   @@index([watchId])
 }
 
+model SignInCode {
+  id        String   @id @default(cuid())
+  email     String
+  codeHash  String
+  expiresAt DateTime
+  attempts  Int      @default(0)
+  createdAt DateTime @default(now())
+
+  @@index([email])
+  @@index([expiresAt])
+}
+
 model Check {
   id        String   @id @default(cuid())
   watchId   String

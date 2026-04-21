@@ -5,23 +5,37 @@ const from = process.env.RESEND_FROM ?? "Pagedog <onboarding@resend.dev>";
 
 const resend = apiKey ? new Resend(apiKey) : null;
 
-export async function sendMagicLink(input: { to: string; url: string }) {
+export async function sendMagicLink(input: {
+  to: string;
+  url: string;
+  code: string;
+  appUrl: string;
+}) {
   if (!resend) {
-    console.warn("[email] RESEND_API_KEY not set, magic link:", input.url);
+    console.warn("[email] RESEND_API_KEY not set, magic link:", input.url, "code:", input.code);
     return;
   }
-  const subject = "Sign in to Pagedog";
+  let host: string;
+  try {
+    host = new URL(input.appUrl).host;
+  } catch {
+    host = "pagedog";
+  }
+  const subject = `Pagedog sign-in code: ${input.code}`;
   const html = `<!doctype html>
 <html><body style="font-family:-apple-system,Segoe UI,Helvetica,Arial,sans-serif;color:#0a0a0a;max-width:560px;margin:0 auto;padding:24px">
   <h2 style="margin:0 0 8px">Sign in to Pagedog</h2>
-  <p style="margin:0 0 16px;color:#525252">Click the button below to sign in. This link expires in 15 minutes.</p>
-  <p style="margin:24px 0">
+  <p style="margin:0 0 16px;color:#525252">Your verification code is:</p>
+  <p style="margin:16px 0;font-size:32px;font-weight:600;letter-spacing:4px;text-align:center;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace">${escape(input.code)}</p>
+  <p style="margin:0 0 24px;color:#737373;font-size:13px;text-align:center">This code expires in 15 minutes.</p>
+  <p style="margin:24px 0 8px;color:#525252">Or click the button to sign in directly:</p>
+  <p style="margin:8px 0 24px">
     <a href="${escape(input.url)}" style="display:inline-block;background:#eabf43;color:#0a0a0a;padding:10px 18px;border-radius:8px;text-decoration:none;font-weight:500">Sign in</a>
   </p>
-  <p style="margin:0;color:#737373;font-size:12px">Or paste this URL: ${escape(input.url)}</p>
-  <p style="margin:24px 0 0;color:#a3a3a3;font-size:12px">If you didn&apos;t request this, you can ignore the email.</p>
+  <p style="margin:0;color:#a3a3a3;font-size:12px">If you didn&apos;t request this, you can ignore the email.</p>
+  <p style="margin:24px 0 0;color:#d4d4d4;font-size:11px">@${escape(host)} #${escape(input.code)}</p>
 </body></html>`;
-  const text = `Sign in to Pagedog\n\n${input.url}\n\nLink expires in 15 minutes.`;
+  const text = `Your Pagedog verification code is: ${input.code}\n\nThis code expires in 15 minutes.\n\nOr sign in directly: ${input.url}\n\n@${host} #${input.code}`;
   await resend.emails.send({ from, to: input.to, subject, html, text });
 }
 
