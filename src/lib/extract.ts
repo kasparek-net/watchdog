@@ -14,41 +14,68 @@ export type ExtractResult =
   | { ok: false; error: string };
 
 const MAX_BYTES = 5 * 1024 * 1024;
+const MAX_REDIRECTS = 5;
 
 export async function fetchHtml(url: string, timeoutMs = 15000): Promise<string> {
-  const res = await fetch(url, {
-    headers: {
-      "User-Agent":
-        "PagedogBot/1.0 (+https://github.com/kasparek-net/pagedog)",
-      Accept: "text/html,application/xhtml+xml",
-      "Accept-Language": "cs,en;q=0.9",
-    },
-    redirect: "follow",
-    signal: AbortSignal.timeout(timeoutMs),
-    cache: "no-store",
-  });
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
-  const ct = res.headers.get("content-type") ?? "";
-  if (!ct.includes("html") && !ct.includes("xml") && !ct.includes("text")) {
-    throw new Error(`Unexpected content-type: ${ct}`);
-  }
-  const reader = res.body?.getReader();
-  if (!reader) return await res.text();
-  const decoder = new TextDecoder();
-  let html = "";
-  let total = 0;
-  while (true) {
-    const { value, done } = await reader.read();
-    if (done) break;
-    total += value.byteLength;
-    if (total > MAX_BYTES) {
-      reader.cancel().catch(() => {});
-      throw new Error("Response too large (limit 5 MB)");
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    let current = url;
+    let res: Response | null = null;
+    for (let hop = 0; hop <= MAX_REDIRECTS; hop++) {
+      const parsed = new URL(current);
+      if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
+        throw new Error(`Disallowed protocol: ${parsed.protocol}`);
+      }
+      await assertPublicHost(parsed.hostname);
+      res = await fetch(current, {
+        headers: {
+          "User-Agent":
+            "PagedogBot/1.0 (+https://github.com/kasparek-net/pagedog)",
+          Accept: "text/html,application/xhtml+xml",
+          "Accept-Language": "cs,en;q=0.9",
+        },
+        redirect: "manual",
+        signal: controller.signal,
+        cache: "no-store",
+      });
+      if (res.status >= 300 && res.status < 400) {
+        const loc = res.headers.get("location");
+        if (!loc) throw new Error("Redirect without Location header");
+        current = new URL(loc, current).toString();
+        continue;
+      }
+      break;
     }
-    html += decoder.decode(value, { stream: true });
+    if (!res) throw new Error("Fetch failed");
+    if (res.status >= 300 && res.status < 400) {
+      throw new Error("Too many redirects");
+    }
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const ct = res.headers.get("content-type") ?? "";
+    if (!ct.includes("html") && !ct.includes("xml") && !ct.includes("text")) {
+      throw new Error(`Unexpected content-type: ${ct}`);
+    }
+    const reader = res.body?.getReader();
+    if (!reader) return await res.text();
+    const decoder = new TextDecoder();
+    let html = "";
+    let total = 0;
+    while (true) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      total += value.byteLength;
+      if (total > MAX_BYTES) {
+        reader.cancel().catch(() => {});
+        throw new Error("Response too large (limit 5 MB)");
+      }
+      html += decoder.decode(value, { stream: true });
+    }
+    html += decoder.decode();
+    return html;
+  } finally {
+    clearTimeout(timer);
   }
-  html += decoder.decode();
-  return html;
 }
 
 export function isPrivateIp(ip: string): boolean {
