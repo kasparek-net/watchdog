@@ -75,6 +75,36 @@ export async function sendChangeNotification(input: {
   });
 }
 
+export async function sendSelectorGoneNotification(input: {
+  to: string;
+  label: string;
+  url: string;
+  selector: string;
+  lastValue: string;
+  watchId: string;
+}) {
+  if (!resend) {
+    console.warn("[email] RESEND_API_KEY not set, skipping selector-gone email");
+    return;
+  }
+  const appUrl = process.env.APP_URL ?? "http://localhost:3000";
+  const subject = `Page changed: ${input.label}`;
+  const html = `
+<!doctype html>
+<html><body style="font-family:-apple-system,Segoe UI,Helvetica,Arial,sans-serif;color:#0a0a0a;max-width:560px;margin:0 auto;padding:24px">
+  <h2 style="margin:0 0 8px">${escape(input.label)}</h2>
+  <p style="margin:0 0 16px;color:#525252">The element we were tracking is no longer on the page — it looks like the page was redesigned or the content was removed. The watch has been paused.</p>
+  <table style="width:100%;border-collapse:collapse;margin:16px 0">
+    <tr><td style="padding:8px;background:#fafafa;border:1px solid #e5e5e5;width:80px;font-size:12px;color:#737373">Last seen</td><td style="padding:8px;border:1px solid #e5e5e5">${escape(input.lastValue)}</td></tr>
+    <tr><td style="padding:8px;background:#fafafa;border:1px solid #e5e5e5;font-size:12px;color:#737373">Selector</td><td style="padding:8px;border:1px solid #e5e5e5;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12px">${escape(input.selector)}</td></tr>
+  </table>
+  <p style="margin:24px 0 8px"><a href="${escape(appUrl)}/watches/${input.watchId}" style="display:inline-block;background:#eabf43;color:#0a0a0a;padding:8px 14px;border-radius:6px;text-decoration:none;font-weight:500">Update selector</a></p>
+  <p style="margin:8px 0 0;color:#a3a3a3;font-size:12px">Page: <a href="${escape(input.url)}" style="color:#737373">${escape(input.url)}</a></p>
+</body></html>`;
+  const text = `Page changed: ${input.label}\n\nThe element we were tracking is no longer on the page — it looks like the page was redesigned or the content was removed. The watch has been paused.\n\nLast seen: ${input.lastValue}\nSelector: ${input.selector}\n\nUpdate selector: ${appUrl}/watches/${input.watchId}\nPage: ${input.url}\n`;
+  await resend.emails.send({ from, to: input.to, subject, html, text });
+}
+
 export async function sendAutoPauseNotification(input: {
   to: string;
   label: string;

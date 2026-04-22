@@ -3,6 +3,8 @@ import { createHash } from "node:crypto";
 import { lookup } from "node:dns/promises";
 import { isIP } from "node:net";
 
+export type ExtractErrorKind = "fetch" | "selector";
+
 export type ExtractResult =
   | {
       ok: true;
@@ -11,7 +13,7 @@ export type ExtractResult =
       imageUrl: string | null;
       faviconUrl: string | null;
     }
-  | { ok: false; error: string };
+  | { ok: false; error: string; kind: ExtractErrorKind };
 
 const MAX_BYTES = 5 * 1024 * 1024;
 const MAX_REDIRECTS = 5;
@@ -126,17 +128,18 @@ export function extractFromHtml(
   try {
     $ = cheerio.load(html);
   } catch {
-    return { ok: false, error: "HTML parse error" };
+    return { ok: false, error: "HTML parse error", kind: "fetch" };
   }
   let el;
   try {
     el = $(selector).first();
   } catch {
-    return { ok: false, error: "Invalid CSS selector" };
+    return { ok: false, error: "Invalid CSS selector", kind: "selector" };
   }
-  if (el.length === 0) return { ok: false, error: "Selector matched no element" };
+  if (el.length === 0)
+    return { ok: false, error: "Selector matched no element", kind: "selector" };
   const text = el.text().replace(/\s+/g, " ").trim();
-  if (!text) return { ok: false, error: "Element is empty" };
+  if (!text) return { ok: false, error: "Element is empty", kind: "selector" };
   const imageUrl = baseUrl ? extractOgImage($, baseUrl) : null;
   const faviconUrl = baseUrl ? extractFavicon($, baseUrl) : null;
   return { ok: true, value: text, hash: sha256(text), imageUrl, faviconUrl };
@@ -223,7 +226,11 @@ export async function fetchAndExtract(
   try {
     html = await fetchHtml(url);
   } catch (e) {
-    return { ok: false, error: e instanceof Error ? e.message : "Fetch failed" };
+    return {
+      ok: false,
+      error: e instanceof Error ? e.message : "Fetch failed",
+      kind: "fetch",
+    };
   }
   return extractFromHtml(html, selector, url);
 }

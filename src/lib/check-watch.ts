@@ -1,6 +1,10 @@
 import { db } from "@/lib/db";
 import { fetchAndExtract } from "@/lib/extract";
-import { sendChangeNotification, sendAutoPauseNotification } from "@/lib/email";
+import {
+  sendChangeNotification,
+  sendAutoPauseNotification,
+  sendSelectorGoneNotification,
+} from "@/lib/email";
 import { evaluate, type Condition, type ConditionType } from "@/lib/condition";
 
 const AUTO_PAUSE_THRESHOLD = 5;
@@ -27,16 +31,37 @@ export async function processWatch(watch: ProcessInput): Promise<ProcessResult> 
   const durationMs = Date.now() - t0;
 
   if (!result.ok) {
+    const isSelectorGone =
+      result.kind === "selector" && watch.lastHash !== null && watch.lastValue !== null;
     await db.$transaction([
       db.watch.update({
         where: { id: watch.id },
-        data: { lastCheckedAt: new Date(), lastError: result.error },
+        data: {
+          lastCheckedAt: new Date(),
+          lastError: result.error,
+          ...(isSelectorGone ? { isActive: false } : {}),
+        },
       }),
       db.check.create({
         data: { watchId: watch.id, status: "error", error: result.error, durationMs },
       }),
     ]);
-    await maybeAutoPause(watch);
+    if (isSelectorGone) {
+      try {
+        await sendSelectorGoneNotification({
+          to: watch.notifyEmail,
+          label: watch.label,
+          url: watch.url,
+          selector: watch.selector,
+          lastValue: watch.lastValue!,
+          watchId: watch.id,
+        });
+      } catch (e) {
+        console.error("[check-watch] selector-gone email failed", e);
+      }
+    } else {
+      await maybeAutoPause(watch);
+    }
     return "error";
   }
   if (watch.lastHash === result.hash) {
