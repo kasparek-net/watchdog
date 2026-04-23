@@ -23,7 +23,7 @@ export async function sendMagicLink(input: {
   }
   const subject = `🔑 Pagedog sign-in code: ${input.code}`;
   const html = `<!doctype html>
-<html><body style="font-family:-apple-system,Segoe UI,Helvetica,Arial,sans-serif;color:#0a0a0a;max-width:560px;margin:0 auto;padding:24px">
+<html><head><meta charset="utf-8"></head><body style="font-family:-apple-system,Segoe UI,Helvetica,Arial,sans-serif;color:#0a0a0a;max-width:560px;margin:0 auto;padding:24px">
   <h2 style="margin:0 0 8px">🔑 Sign in to Pagedog</h2>
   <p style="margin:0 0 16px;color:#525252">Your verification code is:</p>
   <p style="margin:16px 0;font-size:32px;font-weight:600;letter-spacing:4px;text-align:center;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace">${escape(input.code)}</p>
@@ -55,7 +55,7 @@ export async function sendChangeNotification(input: {
   const subject = `🔔 Change detected: ${input.label}`;
   const html = `
 <!doctype html>
-<html><body style="font-family:-apple-system,Segoe UI,Helvetica,Arial,sans-serif;color:#0a0a0a;max-width:560px;margin:0 auto;padding:24px">
+<html><head><meta charset="utf-8"></head><body style="font-family:-apple-system,Segoe UI,Helvetica,Arial,sans-serif;color:#0a0a0a;max-width:560px;margin:0 auto;padding:24px">
   <h2 style="margin:0 0 8px">🔔 ${escape(input.label)}</h2>
   <p style="margin:0 0 16px;color:#525252">A change was detected on the watched page.</p>
   <table style="width:100%;border-collapse:collapse;margin:16px 0">
@@ -91,7 +91,7 @@ export async function sendSelectorGoneNotification(input: {
   const subject = `⚠️ Page changed: ${input.label}`;
   const html = `
 <!doctype html>
-<html><body style="font-family:-apple-system,Segoe UI,Helvetica,Arial,sans-serif;color:#0a0a0a;max-width:560px;margin:0 auto;padding:24px">
+<html><head><meta charset="utf-8"></head><body style="font-family:-apple-system,Segoe UI,Helvetica,Arial,sans-serif;color:#0a0a0a;max-width:560px;margin:0 auto;padding:24px">
   <h2 style="margin:0 0 8px">⚠️ ${escape(input.label)}</h2>
   <p style="margin:0 0 16px;color:#525252">The element we were tracking is no longer on the page — it looks like the page was redesigned or the content was removed. The watch has been paused.</p>
   <table style="width:100%;border-collapse:collapse;margin:16px 0">
@@ -121,7 +121,7 @@ export async function sendAutoPauseNotification(input: {
   const subject = `⏸️ Watch paused: ${input.label}`;
   const html = `
 <!doctype html>
-<html><body style="font-family:-apple-system,Segoe UI,Helvetica,Arial,sans-serif;color:#0a0a0a;max-width:560px;margin:0 auto;padding:24px">
+<html><head><meta charset="utf-8"></head><body style="font-family:-apple-system,Segoe UI,Helvetica,Arial,sans-serif;color:#0a0a0a;max-width:560px;margin:0 auto;padding:24px">
   <h2 style="margin:0 0 8px">⏸️ ${escape(input.label)}</h2>
   <p style="margin:0 0 16px;color:#525252">This watch failed ${input.failures} times in a row and has been paused.</p>
   <p style="margin:0 0 8px;color:#737373;font-size:13px">Last error</p>
