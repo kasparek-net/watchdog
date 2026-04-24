@@ -10,6 +10,12 @@
 
 Self-hosted website change watcher. Paste a URL, click the element you want to track, and Pagedog checks it every hour. When the text changes, you get an email. Product back-in-stock alerts, price drops, status page changes — without paying Visualping or Distill.io every month.
 
+<p align="center">
+  <img src="public/screenshots/watches-list.png" alt="Pagedog watches list" width="900">
+  <br><br>
+  <img src="public/screenshots/watch-detail.png" alt="Pagedog watch detail with preview" width="900">
+</p>
+
 ## Features
 
 - 🖱 **Visual picker** — hover inside the page preview, click, and the app remembers a unique CSS selector.
